@@ -27,6 +27,27 @@ export const navigation = [
   { label: "Contact", href: "#contact" },
 ] as const;
 
+export const heroSlides = [
+  {
+    src: "/images/hero-campus.jpg",
+    alt: "Temporary wide campus photography placeholder",
+    label: "Our Campus",
+    caption: "A welcoming place to learn and belong",
+  },
+  {
+    src: "/images/school-life.jpg",
+    alt: "Temporary school-life photography placeholder",
+    label: "School Life",
+    caption: "Learning, creativity and character in action",
+  },
+  {
+    src: "/images/gallery-01.jpg",
+    alt: "Temporary school-community photography placeholder",
+    label: "Our Community",
+    caption: "Growing with confidence from Early Years to A-Level",
+  },
+] as const;
+
 export const academicJourney = [
   {
     index: "01",

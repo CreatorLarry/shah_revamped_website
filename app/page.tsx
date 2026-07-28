@@ -1,6 +1,5 @@
 import Image from "next/image";
 import {
-  ArrowDown,
   ArrowUpRight,
   CalendarDays,
   Check,
@@ -10,6 +9,7 @@ import { AcademicJourney } from "@/components/AcademicJourney";
 import { ButtonLink } from "@/components/ButtonLink";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { HeroSection } from "@/components/HeroSection";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Strengths } from "@/components/Strengths";
 import {
@@ -25,77 +25,7 @@ export default function Home() {
     <>
       <Header />
       <main id="top">
-        <section
-          aria-labelledby="hero-title"
-          className="relative isolate flex min-h-[calc(100svh-122px)] items-end overflow-hidden bg-school-navy md:min-h-[760px]"
-        >
-          <Image
-            src="/images/hero-campus.jpg"
-            alt="Temporary campus photography placeholder"
-            fill
-            unoptimized
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,29,60,0.94)_0%,rgba(3,29,60,0.78)_43%,rgba(3,29,60,0.2)_79%),linear-gradient(0deg,rgba(3,29,60,0.82)_0%,transparent_48%)]" />
-          <div
-            aria-hidden="true"
-            className="absolute inset-y-0 right-[12%] hidden w-px bg-white/15 xl:block"
-          />
-          <div
-            aria-hidden="true"
-            className="absolute inset-x-0 top-1/3 hidden h-px bg-white/10 xl:block"
-          />
-
-          <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 pb-12 pt-24 sm:px-6 sm:pb-16 md:pb-20 lg:px-10 lg:pb-24">
-            <div className="max-w-[900px]">
-              <div className="hero-reveal hero-reveal-1 mb-6 flex items-center gap-3 text-[0.67rem] font-bold uppercase tracking-[0.2em] text-school-gold sm:text-[0.72rem]">
-                <span aria-hidden="true" className="h-px w-9 bg-school-gold" />
-                Cambridge Curriculum International School · Nakuru
-              </div>
-              <h1
-                id="hero-title"
-                className="hero-reveal hero-reveal-2 max-w-[850px] font-serif text-[clamp(3.35rem,8.5vw,7.8rem)] leading-[0.87] tracking-[-0.055em] text-white"
-              >
-                An Education That Inspires{" "}
-                <span className="text-school-gold">Excellence.</span>
-              </h1>
-              <p className="hero-reveal hero-reveal-3 mt-7 max-w-[680px] text-base leading-7 text-white/78 sm:text-lg sm:leading-8">
-                Shah Lalji Nangpar Academy nurtures confident, compassionate
-                and future-ready learners through a rich Cambridge education
-                from Early Years to A-Level.
-              </p>
-              <div className="hero-reveal hero-reveal-4 mt-9 flex flex-col gap-3 sm:flex-row">
-                <ButtonLink href="#admissions">Explore Admissions</ButtonLink>
-                <ButtonLink href="#our-school" variant="outline">
-                  Discover Our School
-                </ButtonLink>
-              </div>
-            </div>
-
-            <div className="mt-14 flex flex-col gap-5 border-t border-white/20 pt-6 text-white sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-[0.64rem] font-bold uppercase tracking-[0.2em] text-white/45">
-                  A complete learning journey
-                </p>
-                <p className="mt-2 font-serif text-xl tracking-[-0.01em] sm:text-2xl">
-                  Early Years <span className="px-2 text-school-gold">→</span>{" "}
-                  A-Level
-                </p>
-              </div>
-              <a
-                href="#our-school"
-                className="group inline-flex items-center gap-3 text-[0.66rem] font-bold uppercase tracking-[0.18em] text-white/70 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-gold"
-              >
-                Explore the school
-                <span className="flex size-10 items-center justify-center border border-white/30 transition-colors group-hover:border-school-gold group-hover:bg-school-gold group-hover:text-school-ink">
-                  <ArrowDown aria-hidden="true" className="size-4" />
-                </span>
-              </a>
-            </div>
-          </div>
-        </section>
+        <HeroSection />
 
         <section
           id="our-school"
