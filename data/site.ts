@@ -29,20 +29,20 @@ export const navigation = [
 
 export const heroSlides = [
   {
-    src: "/images/hero-campus.jpg",
-    alt: "Temporary wide campus photography placeholder",
+    src: "/images/school/campus-assembly.webp",
+    alt: "SLNA learners gathered for an assembly in the school courtyard",
     label: "Our Campus",
     caption: "A welcoming place to learn and belong",
   },
   {
-    src: "/images/school-life.jpg",
-    alt: "Temporary school-life photography placeholder",
+    src: "/images/school/sports-day-community.webp",
+    alt: "Junior learners enjoying an energetic outdoor school activity",
     label: "School Life",
     caption: "Learning, creativity and character in action",
   },
   {
-    src: "/images/gallery-01.jpg",
-    alt: "Temporary school-community photography placeholder",
+    src: "/images/school/senior-students-community.webp",
+    alt: "Senior students gathered together in their red school blazers",
     label: "Our Community",
     caption: "Growing with confidence from Early Years to A-Level",
   },
@@ -55,7 +55,8 @@ export const academicJourney = [
     stage: "From age 2 · Early foundations",
     description:
       "A warm, purposeful start where play, curiosity and early learning build confidence for the journey ahead.",
-    image: "/images/early-years.jpg",
+    image: "/images/school/early-years-fruit-learning.webp",
+    alt: "Early Years learners exploring different fruits with their teachers",
     href: "#contact",
   },
   {
@@ -64,7 +65,8 @@ export const academicJourney = [
     stage: "Primary · Up to Year 6",
     description:
       "Engaging Cambridge-aligned learning that develops strong foundations, inquiry and a growing sense of independence.",
-    image: "/images/junior-school.jpg",
+    image: "/images/school/chess-club.webp",
+    alt: "Junior School learners concentrating during a chess activity",
     href: "#contact",
   },
   {
@@ -73,7 +75,8 @@ export const academicJourney = [
     stage: "Years 7–11 · IGCSE pathway",
     description:
       "A broad and inclusive programme that deepens subject knowledge, critical thinking and personal responsibility.",
-    image: "/images/senior-school.jpg",
+    image: "/images/school/outdoor-study.webp",
+    alt: "A Senior School learner writing during an outdoor study session",
     href: "#contact",
   },
   {
@@ -82,7 +85,8 @@ export const academicJourney = [
     stage: "Years 12–13 · Age 16+",
     description:
       "A focused two-year pathway that prepares ambitious learners for university, leadership and life beyond school.",
-    image: "/images/a-level.jpg",
+    image: "/images/school/museum-learning-trip.webp",
+    alt: "Senior learners taking part in an educational museum visit",
     href: "#contact",
   },
 ] as const;
@@ -149,14 +153,15 @@ export const statistics = [
 ] as const;
 
 // TODO(content): These cards are intentionally marked as sample content. Replace
-// them with approved stories, dates and images before the public content launch.
+// them with approved stories and dates before the public content launch.
 export const stories = [
   {
     category: "Sample story",
     title: "Inside a Day at SLNA",
     excerpt:
       "A placeholder feature introducing the rhythm, relationships and experiences that shape a school day.",
-    image: "/images/gallery-02.jpg",
+    image: "/images/school/outdoor-study.webp",
+    alt: "A learner focused on her work during an outdoor study session",
     status: "Replace with an approved school story",
   },
   {
@@ -164,7 +169,8 @@ export const stories = [
     title: "The Cambridge Journey, Explained",
     excerpt:
       "A placeholder editorial guide showing families how learning progresses from Early Years to A-Level.",
-    image: "/images/gallery-04.jpg",
+    image: "/images/school/early-years-fruit-learning.webp",
+    alt: "Teachers and Early Years learners exploring fruit in the classroom",
     status: "Replace with approved admissions content",
   },
   {
@@ -172,34 +178,35 @@ export const stories = [
     title: "Meet Our Learning Community",
     excerpt:
       "A placeholder profile format for future stories about learners, educators, families and school life.",
-    image: "/images/gallery-06.jpg",
+    image: "/images/school/senior-students-community.webp",
+    alt: "A diverse group of SLNA senior students in their school blazers",
     status: "Replace with an approved community story",
   },
 ] as const;
 
 export const gallery = [
   {
-    src: "/images/gallery-01.jpg",
-    alt: "Placeholder for a wide school campus photograph",
+    src: "/images/school/creative-arts-masks.webp",
+    alt: "Learners presenting colourful masks they created during an arts activity",
   },
   {
-    src: "/images/gallery-02.jpg",
-    alt: "Placeholder for a classroom learning photograph",
+    src: "/images/school/early-years-taekwondo.webp",
+    alt: "Early Years learners practising taekwondo together",
   },
   {
-    src: "/images/gallery-03.jpg",
-    alt: "Placeholder for a student activity photograph",
+    src: "/images/school/netball-training.webp",
+    alt: "A learner preparing to pass a ball during outdoor netball training",
   },
   {
-    src: "/images/gallery-04.jpg",
-    alt: "Placeholder for a sports photograph",
+    src: "/images/school/swimming-competition.webp",
+    alt: "SLNA swimmers competing in marked lanes during a school event",
   },
   {
-    src: "/images/gallery-05.jpg",
-    alt: "Placeholder for an arts and creativity photograph",
+    src: "/images/school/careers-day.webp",
+    alt: "Young learners dressed for different careers during a school activity",
   },
   {
-    src: "/images/gallery-06.jpg",
-    alt: "Placeholder for a school community photograph",
+    src: "/images/school/cycling-club.webp",
+    alt: "Learners standing with their bicycles during an outdoor cycling activity",
   },
 ] as const;

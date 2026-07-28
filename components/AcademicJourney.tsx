@@ -32,7 +32,7 @@ export function AcademicJourney() {
             <div className="relative aspect-[7/4] overflow-hidden bg-school-navy">
               <Image
                 src={stage.image}
-                alt={`Photography placeholder for ${stage.title}`}
+                alt={stage.alt}
                 fill
                 unoptimized
                 sizes="(max-width: 1024px) 100vw, 50vw"

@@ -22,21 +22,16 @@ npm run build
 For Vercel, connect the repository normally. The `vercel-build` script runs the
 standard Next.js production build.
 
-## Replace the logo and photography
+## Logo and photography
 
 - Official logo: `public/images/school-logo.png`
-- Hero image: `public/images/hero-campus.jpg`
-- Introduction image: `public/images/campus-introduction.jpg`
-- Academic-stage images: `public/images/early-years.jpg`,
-  `junior-school.jpg`, `senior-school.jpg` and `a-level.jpg`
 - Chairman portrait: `public/images/chairman-portrait.jpg`
-- School-life image: `public/images/school-life.jpg`
-- Gallery images: `public/images/gallery-01.jpg` through
-  `public/images/gallery-06.jpg`
+- Supplied school photography: `public/images/school/`
+- Photo preparation script: `scripts/process-school-photos.mjs`
 
-Keep the same filenames to replace images without changing the layout. The
-current JPGs are intentionally branded placeholders; they do not depict fake
-students, classrooms or facilities.
+The homepage now uses supplied school photography throughout the hero,
+academic journey, school-life, story preview and gallery sections. The chairman
+portrait remains a temporary image until an official portrait is supplied.
 
 ## Update school content
 

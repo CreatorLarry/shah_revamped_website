@@ -72,8 +72,8 @@ export default function Home() {
             <div className="relative lg:col-span-6">
               <div className="relative ml-auto aspect-[5/6] max-w-[610px] overflow-hidden bg-school-navy">
                 <Image
-                  src="/images/campus-introduction.jpg"
-                  alt="Temporary campus or learner photography placeholder"
+                  src="/images/school/student-portrait.webp"
+                  alt="A smiling SLNA learner in school uniform"
                   fill
                   unoptimized
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -244,8 +244,8 @@ export default function Home() {
                 />
                 <div className="relative mt-10 aspect-[7/5] overflow-hidden bg-school-navy">
                   <Image
-                    src="/images/school-life.jpg"
-                    alt="Temporary school-life photography placeholder"
+                    src="/images/school/cycling-club.webp"
+                    alt="SLNA learners preparing their bicycles during an outdoor club activity"
                     fill
                     unoptimized
                     sizes="(max-width: 1024px) 100vw, 60vw"
@@ -283,8 +283,8 @@ export default function Home() {
                 </div>
                 <div className="mt-8 border-l-2 border-school-gold bg-white p-6">
                   <p className="text-sm leading-7 text-school-muted">
-                    School-life photography and approved programme details can
-                    be added here without changing the layout.
+                    From sport and creative activities to clubs and leadership,
+                    learners have many ways to discover their strengths.
                   </p>
                 </div>
               </div>
@@ -360,14 +360,14 @@ export default function Home() {
                   <div className="relative aspect-[8/5] overflow-hidden bg-school-navy">
                     <Image
                       src={story.image}
-                      alt={`Temporary image for ${story.title}`}
+                      alt={story.alt}
                       fill
                       unoptimized
                       sizes="(max-width: 1024px) 100vw, 33vw"
                       className="object-cover transition-transform duration-700 group-hover:scale-[1.035]"
                     />
                     <div className="absolute left-4 top-4 bg-school-red px-3 py-2 text-[0.58rem] font-bold uppercase tracking-[0.15em] text-white">
-                      Placeholder
+                      Sample content
                     </div>
                   </div>
                   <div className="flex flex-1 flex-col p-6 sm:p-7">
@@ -502,8 +502,8 @@ export default function Home() {
                 aria-hidden="true"
                 className="mt-1 size-4 shrink-0 text-school-red"
               />
-              Every image above is a local placeholder with a clearly named file
-              ready to be replaced by approved school photography.
+              Photography supplied by Shah Lalji Nangpar Academy, reflecting
+              learning, creativity, sport and community life across the school.
             </div>
           </div>
         </section>
