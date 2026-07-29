@@ -12,7 +12,7 @@ import { academicJourney, navigation, school } from "@/data/site";
 
 export function Footer() {
   return (
-    <footer id="contact" className="scroll-mt-28 bg-school-ink text-white">
+    <footer className="bg-school-ink text-white">
       <div className="border-b border-white/12">
         <div className="mx-auto grid max-w-[1440px] gap-px bg-white/12 px-4 sm:px-6 md:grid-cols-3 lg:px-10">
           <a
@@ -147,7 +147,7 @@ export function Footer() {
             {academicJourney.map((stage) => (
               <li key={stage.title}>
                 <a
-                  href="#education"
+                  href={stage.href}
                   className="text-sm text-white/62 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-school-gold"
                 >
                   {stage.title}
@@ -191,10 +191,10 @@ export function Footer() {
         <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-6 text-[0.65rem] uppercase tracking-[0.12em] text-white/38 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-10">
           <p>© 2026 {school.name}. All rights reserved.</p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
-            <a href="#contact" className="transition-colors hover:text-white">
+            <a href="/contact" className="transition-colors hover:text-white">
               Privacy · Placeholder
             </a>
-            <a href="#contact" className="transition-colors hover:text-white">
+            <a href="/contact" className="transition-colors hover:text-white">
               Terms · Placeholder
             </a>
           </div>

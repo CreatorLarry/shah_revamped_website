@@ -1,7 +1,21 @@
-# Shah Lalji Nangpar Academy — Phase 1
+# Shah Lalji Nangpar Academy — Phase 2
 
-Premium, responsive homepage and shared design foundation for Shah Lalji
-Nangpar Academy. Built with Next.js, TypeScript, Tailwind CSS and Lucide icons.
+Responsive multi-page website and shared design system for Shah Lalji Nangpar
+Academy. Built with Next.js, TypeScript, Tailwind CSS and Lucide icons.
+
+## Phase 2 routes
+
+- Homepage: `/`
+- Our School: `/our-school`
+- Education: `/education`
+- Admissions: `/admissions`
+- School Life: `/school-life`
+- Photo Gallery: `/gallery`
+- Contact Us: `/contact`
+
+The page structure and factual school content are based on the current official
+website at `http://shahlalji.ac.ke/`. The new site retains the Phase 1 visual
+direction while improving the content hierarchy, navigation and presentation.
 
 ## Install and run
 

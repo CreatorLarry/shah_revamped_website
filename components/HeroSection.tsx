@@ -163,8 +163,8 @@ export function HeroSection() {
             Years to A-Level.
           </p>
           <div className="hero-reveal hero-reveal-4 mt-9 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="#admissions">Explore Admissions</ButtonLink>
-            <ButtonLink href="#our-school" variant="outline">
+            <ButtonLink href="/admissions">Explore Admissions</ButtonLink>
+            <ButtonLink href="/our-school" variant="outline">
               Discover Our School
             </ButtonLink>
           </div>
@@ -181,7 +181,7 @@ export function HeroSection() {
               </p>
             </div>
             <a
-              href="#our-school"
+              href="/our-school"
               className="group inline-flex items-center gap-3 text-[0.64rem] font-bold uppercase tracking-[0.18em] text-white/70 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-gold md:mt-5"
             >
               Explore the school

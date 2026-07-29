@@ -19,12 +19,12 @@ export const school = {
 } as const;
 
 export const navigation = [
-  { label: "Our School", href: "#our-school" },
-  { label: "Education", href: "#education" },
-  { label: "Admissions", href: "#admissions" },
-  { label: "School Life", href: "#school-life" },
-  { label: "Gallery", href: "#gallery" },
-  { label: "Contact", href: "#contact" },
+  { label: "Our School", href: "/our-school" },
+  { label: "Education", href: "/education" },
+  { label: "Admissions", href: "/admissions" },
+  { label: "School Life", href: "/school-life" },
+  { label: "Gallery", href: "/gallery" },
+  { label: "Contact", href: "/contact" },
 ] as const;
 
 export const heroSlides = [
@@ -57,7 +57,7 @@ export const academicJourney = [
       "A warm, purposeful start where play, curiosity and early learning build confidence for the journey ahead.",
     image: "/images/school/early-years-fruit-learning.webp",
     alt: "Early Years learners exploring different fruits with their teachers",
-    href: "#contact",
+    href: "/education#early-years",
   },
   {
     index: "02",
@@ -67,7 +67,7 @@ export const academicJourney = [
       "Engaging Cambridge-aligned learning that develops strong foundations, inquiry and a growing sense of independence.",
     image: "/images/school/chess-club.webp",
     alt: "Junior School learners concentrating during a chess activity",
-    href: "#contact",
+    href: "/education#junior-school",
   },
   {
     index: "03",
@@ -77,7 +77,7 @@ export const academicJourney = [
       "A broad and inclusive programme that deepens subject knowledge, critical thinking and personal responsibility.",
     image: "/images/school/outdoor-study.webp",
     alt: "A Senior School learner writing during an outdoor study session",
-    href: "#contact",
+    href: "/education#senior-school",
   },
   {
     index: "04",
@@ -87,7 +87,7 @@ export const academicJourney = [
       "A focused two-year pathway that prepares ambitious learners for university, leadership and life beyond school.",
     image: "/images/school/museum-learning-trip.webp",
     alt: "Senior learners taking part in an educational museum visit",
-    href: "#contact",
+    href: "/education#a-level",
   },
 ] as const;
 
@@ -152,35 +152,33 @@ export const statistics = [
   },
 ] as const;
 
-// TODO(content): These cards are intentionally marked as sample content. Replace
-// them with approved stories and dates before the public content launch.
 export const stories = [
   {
-    category: "Sample story",
+    category: "School life",
     title: "Inside a Day at SLNA",
     excerpt:
-      "A placeholder feature introducing the rhythm, relationships and experiences that shape a school day.",
+      "Discover the relationships, opportunities and experiences that shape everyday life across the academy.",
     image: "/images/school/outdoor-study.webp",
     alt: "A learner focused on her work during an outdoor study session",
-    status: "Replace with an approved school story",
+    href: "/school-life",
   },
   {
-    category: "Sample guide",
+    category: "Education",
     title: "The Cambridge Journey, Explained",
     excerpt:
-      "A placeholder editorial guide showing families how learning progresses from Early Years to A-Level.",
+      "See how learning progresses from strong early foundations through IGCSE and A-Level.",
     image: "/images/school/early-years-fruit-learning.webp",
     alt: "Teachers and Early Years learners exploring fruit in the classroom",
-    status: "Replace with approved admissions content",
+    href: "/education",
   },
   {
-    category: "Sample profile",
+    category: "Our school",
     title: "Meet Our Learning Community",
     excerpt:
-      "A placeholder profile format for future stories about learners, educators, families and school life.",
+      "Learn more about the values and shared purpose that bring learners, families and staff together.",
     image: "/images/school/senior-students-community.webp",
     alt: "A diverse group of SLNA senior students in their school blazers",
-    status: "Replace with an approved community story",
+    href: "/our-school",
   },
 ] as const;
 
@@ -208,5 +206,110 @@ export const gallery = [
   {
     src: "/images/school/cycling-club.webp",
     alt: "Learners standing with their bicycles during an outdoor cycling activity",
+  },
+] as const;
+
+export const photoLibrary = [
+  {
+    src: "/images/school/creative-arts-masks.webp",
+    alt: "Learners presenting colourful masks they created during an arts activity",
+    title: "Creative expression",
+    category: "Arts",
+  },
+  {
+    src: "/images/school/early-years-fruit-learning.webp",
+    alt: "Early Years learners exploring different fruits with their teachers",
+    title: "Learning through discovery",
+    category: "Early Years",
+  },
+  {
+    src: "/images/school/chess-club.webp",
+    alt: "Junior School learners concentrating during a chess activity",
+    title: "Thinking ahead",
+    category: "Clubs",
+  },
+  {
+    src: "/images/school/sports-day-community.webp",
+    alt: "Junior learners enjoying an energetic outdoor school activity",
+    title: "Joy in participation",
+    category: "Community",
+  },
+  {
+    src: "/images/school/netball-training.webp",
+    alt: "A learner preparing to pass a ball during outdoor netball training",
+    title: "Ready to compete",
+    category: "Sport",
+  },
+  {
+    src: "/images/school/outdoor-study.webp",
+    alt: "A learner focused on her work during an outdoor study session",
+    title: "Focused learning",
+    category: "Academics",
+  },
+  {
+    src: "/images/school/senior-students-community.webp",
+    alt: "Senior students gathered together in their red school blazers",
+    title: "One learning community",
+    category: "Senior School",
+  },
+  {
+    src: "/images/school/early-years-taekwondo.webp",
+    alt: "Early Years learners practising taekwondo together",
+    title: "Confidence in motion",
+    category: "Early Years",
+  },
+  {
+    src: "/images/school/careers-day.webp",
+    alt: "Young learners dressed for different careers during a school activity",
+    title: "Imagining the future",
+    category: "Early Years",
+  },
+  {
+    src: "/images/school/basketball-team.webp",
+    alt: "The school basketball team gathered on the indoor court",
+    title: "Team spirit",
+    category: "Sport",
+  },
+  {
+    src: "/images/school/swimming-competition.webp",
+    alt: "SLNA swimmers competing in marked lanes during a school event",
+    title: "Racing with purpose",
+    category: "Sport",
+  },
+  {
+    src: "/images/school/swimming-training.webp",
+    alt: "Three learners practising their swimming strokes in the school pool",
+    title: "Building technique",
+    category: "Sport",
+  },
+  {
+    src: "/images/school/cycling-club.webp",
+    alt: "Learners standing with their bicycles during an outdoor cycling activity",
+    title: "Learning beyond the classroom",
+    category: "Clubs",
+  },
+  {
+    src: "/images/school/museum-learning-trip.webp",
+    alt: "Senior learners taking part in an educational museum visit",
+    title: "Learning through experience",
+    category: "Trips",
+  },
+  {
+    src: "/images/school/campus-assembly.webp",
+    alt: "SLNA learners gathered for an assembly in the school courtyard",
+    title: "Gathered as one",
+    category: "Community",
+  },
+  {
+    src: "/images/school/student-portrait.webp",
+    alt: "A smiling SLNA learner in school uniform",
+    title: "Confidence to thrive",
+    category: "Learners",
+  },
+  {
+    src: "/images/school/school-event-leadership.webp",
+    alt: "School leaders speaking with learners during an academy event",
+    title: "Leadership in action",
+    category: "Community",
   },
 ] as const;

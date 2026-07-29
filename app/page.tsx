@@ -1,7 +1,6 @@
 import Image from "next/image";
 import {
   ArrowUpRight,
-  CalendarDays,
   Check,
   GraduationCap,
 } from "lucide-react";
@@ -334,20 +333,20 @@ export default function Home() {
             <div className="grid gap-8 lg:grid-cols-12">
               <div className="lg:col-span-7">
                 <SectionHeading
-                  eyebrow="Latest stories"
+                  eyebrow="Explore SLNA"
                   title={
                     <>
-                      A window into{" "}
+                      Continue your{" "}
                       <span className="italic text-school-navy">
-                        life at SLNA.
+                        discovery.
                       </span>
                     </>
                   }
                 />
               </div>
               <p className="self-end text-sm leading-7 text-school-muted lg:col-span-4 lg:col-start-9">
-                These three reusable cards contain sample copy only and are
-                clearly marked for replacement with approved school updates.
+                Learn more about the academic journey, everyday school life and
+                the values that shape our community.
               </p>
             </div>
 
@@ -355,36 +354,41 @@ export default function Home() {
               {stories.map((story) => (
                 <article
                   key={story.title}
-                  className="group flex flex-col bg-white shadow-[0_15px_50px_rgba(6,47,95,0.07)]"
+                  className="group bg-white shadow-[0_15px_50px_rgba(6,47,95,0.07)]"
                 >
-                  <div className="relative aspect-[8/5] overflow-hidden bg-school-navy">
-                    <Image
-                      src={story.image}
-                      alt={story.alt}
-                      fill
-                      unoptimized
-                      sizes="(max-width: 1024px) 100vw, 33vw"
-                      className="object-cover transition-transform duration-700 group-hover:scale-[1.035]"
-                    />
-                    <div className="absolute left-4 top-4 bg-school-red px-3 py-2 text-[0.58rem] font-bold uppercase tracking-[0.15em] text-white">
-                      Sample content
+                  <a
+                    href={story.href}
+                    className="flex h-full flex-col focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-red"
+                  >
+                    <div className="relative aspect-[8/5] overflow-hidden bg-school-navy">
+                      <Image
+                        src={story.image}
+                        alt={story.alt}
+                        fill
+                        unoptimized
+                        sizes="(max-width: 1024px) 100vw, 33vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-[1.035]"
+                      />
                     </div>
-                  </div>
-                  <div className="flex flex-1 flex-col p-6 sm:p-7">
-                    <div className="flex items-center gap-2 text-[0.62rem] font-bold uppercase tracking-[0.15em] text-school-red">
-                      <CalendarDays aria-hidden="true" className="size-3.5" />
-                      {story.category}
+                    <div className="flex flex-1 flex-col p-6 sm:p-7">
+                      <div className="text-[0.62rem] font-bold uppercase tracking-[0.15em] text-school-red">
+                        {story.category}
+                      </div>
+                      <h3 className="mt-5 font-serif text-2xl leading-tight tracking-[-0.02em] text-school-ink sm:text-3xl">
+                        {story.title}
+                      </h3>
+                      <p className="mt-4 text-sm leading-7 text-school-muted">
+                        {story.excerpt}
+                      </p>
+                      <span className="mt-7 flex items-center gap-2 border-t border-school-navy/12 pt-4 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-school-navy transition-colors group-hover:text-school-red">
+                        Explore
+                        <ArrowUpRight
+                          aria-hidden="true"
+                          className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                        />
+                      </span>
                     </div>
-                    <h3 className="mt-5 font-serif text-2xl leading-tight tracking-[-0.02em] text-school-ink sm:text-3xl">
-                      {story.title}
-                    </h3>
-                    <p className="mt-4 text-sm leading-7 text-school-muted">
-                      {story.excerpt}
-                    </p>
-                    <p className="mt-7 border-t border-school-navy/12 pt-4 text-[0.61rem] font-bold uppercase leading-5 tracking-[0.13em] text-school-navy/55">
-                      {story.status}
-                    </p>
-                  </div>
+                  </a>
                 </article>
               ))}
             </div>
@@ -423,11 +427,11 @@ export default function Home() {
                 <ButtonLink href={school.emailHref} variant="light">
                   Make an Enquiry
                 </ButtonLink>
-                <ButtonLink href="#contact" variant="outline">
+                <ButtonLink href="/contact#visit" variant="outline">
                   Book a School Visit
                 </ButtonLink>
                 <a
-                  href="#contact"
+                  href="/admissions"
                   className="flex min-h-12 items-center justify-between border-b border-white/35 py-3 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-white transition-colors hover:border-school-gold hover:text-school-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:col-span-2 lg:col-span-1"
                 >
                   Start an application
@@ -454,7 +458,7 @@ export default function Home() {
                 }
               />
               <a
-                href="#gallery-grid"
+                href="/gallery"
                 className="group inline-flex shrink-0 items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-school-navy transition-colors hover:text-school-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-navy"
               >
                 View gallery preview

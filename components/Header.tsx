@@ -1,12 +1,15 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Mail, MapPin, Menu, Phone, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { navigation, school } from "@/data/site";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -51,7 +54,7 @@ export function Header() {
               Student Portal · Coming soon
             </span>
             <a
-              href="#admissions"
+              href="/contact"
               className="border-l border-white/20 pl-4 text-school-gold transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-school-gold"
             >
               Enquire Now
@@ -62,8 +65,8 @@ export function Header() {
 
       <div className="sticky top-0 z-50 border-b border-school-navy/10 bg-white/95 shadow-[0_12px_28px_rgba(6,47,95,0.07)] backdrop-blur-md">
         <div className="mx-auto flex min-h-[82px] max-w-[1440px] items-center justify-between gap-5 px-4 sm:px-6 lg:min-h-[92px] lg:px-10">
-          <a
-            href="#top"
+          <Link
+            href="/"
             aria-label="Shah Lalji Nangpar Academy home"
             className="flex items-center gap-3 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-navy"
           >
@@ -81,7 +84,7 @@ export function Header() {
               <br />
               Nangpar Academy
             </span>
-          </a>
+          </Link>
 
           <nav aria-label="Main navigation" className="hidden lg:block">
             <ul className="flex items-center gap-1 xl:gap-2">
@@ -89,7 +92,12 @@ export function Header() {
                 <li key={item.href}>
                   <a
                     href={item.href}
-                    className="relative block px-3 py-3 text-[0.69rem] font-bold uppercase tracking-[0.13em] text-school-ink transition-colors after:absolute after:inset-x-3 after:bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-school-red after:transition-transform hover:text-school-red hover:after:scale-x-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-school-navy xl:px-4"
+                    aria-current={pathname === item.href ? "page" : undefined}
+                    className={`relative block px-3 py-3 text-[0.69rem] font-bold uppercase tracking-[0.13em] transition-colors after:absolute after:inset-x-3 after:bottom-1 after:h-px after:origin-left after:bg-school-red after:transition-transform hover:text-school-red hover:after:scale-x-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-school-navy xl:px-4 ${
+                      pathname === item.href
+                        ? "text-school-red after:scale-x-100"
+                        : "text-school-ink after:scale-x-0"
+                    }`}
                   >
                     {item.label}
                   </a>
@@ -100,7 +108,7 @@ export function Header() {
 
           <div className="flex items-center gap-3">
             <a
-              href="#admissions"
+              href="/contact#visit"
               className="hidden min-h-12 items-center justify-center rounded-[3px] bg-school-red px-5 text-[0.7rem] font-bold uppercase tracking-[0.15em] text-white transition-colors hover:bg-school-red-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-red sm:inline-flex lg:px-6"
             >
               Book a Visit
@@ -135,8 +143,13 @@ export function Header() {
                 <li key={item.href}>
                   <a
                     href={item.href}
+                    aria-current={pathname === item.href ? "page" : undefined}
                     onClick={() => setMenuOpen(false)}
-                    className="flex min-h-12 items-center justify-between py-3 text-sm font-bold uppercase tracking-[0.13em] text-school-ink transition-colors hover:text-school-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-school-navy"
+                    className={`flex min-h-12 items-center justify-between py-3 text-sm font-bold uppercase tracking-[0.13em] transition-colors hover:text-school-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-school-navy ${
+                      pathname === item.href
+                        ? "text-school-red"
+                        : "text-school-ink"
+                    }`}
                   >
                     {item.label}
                     <span aria-hidden="true" className="text-school-red">
