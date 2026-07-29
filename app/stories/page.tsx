@@ -7,7 +7,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { InteriorHero } from "@/components/InteriorHero";
 import { SectionHeading } from "@/components/SectionHeading";
-import { stories } from "../../data/stories";
+import { getPublicStories } from "@/data/story-service";
 
 export const metadata: Metadata = {
   title: "School Stories | Shah Lalji Nangpar Academy",
@@ -16,7 +16,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/stories" },
 };
 
-export default function StoriesPage() {
+export const dynamic = "force-dynamic";
+
+export default async function StoriesPage() {
+  const stories = await getPublicStories();
+
   return (
     <>
       <Header />

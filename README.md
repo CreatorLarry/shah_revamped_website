@@ -16,6 +16,7 @@ Academy. Built with Next.js, TypeScript, Tailwind CSS and Lucide icons.
   - Learning Beyond the Classroom: `/stories/learning-beyond-the-classroom`
 - Photo Gallery: `/gallery`
 - Contact Us: `/contact`
+- Staff Dashboard: `/dashboard`
 
 The page structure and factual school content are based on the current official
 website at `http://shahlalji.ac.ke/`. The new site retains the Phase 1 visual
@@ -37,6 +38,18 @@ npm run lint
 npm run build
 ```
 
+The dashboard uses Cloudflare D1 for school stories and admissions enquiries.
+Generate database migrations after schema changes with:
+
+```bash
+npm run db:generate
+```
+
+Dashboard access uses ChatGPT sign-in and is restricted to accounts on the
+`shahlalji.ac.ke` domain plus any additional email addresses listed in the
+hosted `DASHBOARD_ALLOWED_EMAILS` environment variable. Copy `.env.example`
+when local configuration is needed.
+
 For Vercel, connect the repository normally. The `vercel-build` script runs the
 standard Next.js production build.
 
@@ -54,6 +67,9 @@ academic journey, school-life, story preview and gallery sections.
 - Contact details, navigation, academic stages, statistics and gallery entries:
   `data/site.ts`
 - School story content: `data/stories.ts`
+- Dashboard and enquiry storage: `db/dashboard.ts`
+- Database schema and migrations: `db/schema.ts` and `drizzle/`
+- Staff dashboard interface: `app/dashboard/` and `components/DashboardApp.tsx`
 - Homepage section layout: `app/page.tsx`
 - Shared components: `components/`
 - Colour and typography tokens: `app/globals.css`

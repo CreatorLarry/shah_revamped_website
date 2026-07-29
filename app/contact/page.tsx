@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { ArrowUpRight, CalendarCheck, Mail, MapPin, Phone } from "lucide-react";
-import { ButtonLink } from "@/components/ButtonLink";
+import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
+import { EnquiryForm } from "@/components/EnquiryForm";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { InteriorHero } from "@/components/InteriorHero";
@@ -117,7 +117,7 @@ export default function ContactPage() {
                 className="object-cover"
               />
             </div>
-            <div className="lg:col-span-5 lg:col-start-8">
+            <div className="lg:col-span-6">
               <SectionHeading
                 eyebrow="Plan a visit"
                 title={
@@ -130,27 +130,19 @@ export default function ContactPage() {
                 }
                 description="A visit gives your family the opportunity to experience the campus, discuss your child’s needs and understand the next steps."
               />
-              <ul className="mt-9 border-t border-school-navy/15">
-                {[
-                  "Tell us your child’s age and current year group",
-                  "Share the stage and proposed start date you are considering",
-                  "Let us know the best way and time to contact you",
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className="flex gap-4 border-b border-school-navy/15 py-4 text-sm leading-6 text-school-ink"
+              <div className="mt-9">
+                <EnquiryForm />
+              </div>
+              <div className="mt-6 flex flex-col gap-3 border-t border-school-navy/15 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs leading-6 text-school-muted">
+                  Prefer email? Write to{" "}
+                  <a
+                    href={school.emailHref}
+                    className="font-semibold text-school-red hover:underline"
                   >
-                    <CalendarCheck
-                      aria-hidden="true"
-                      className="mt-0.5 size-5 shrink-0 text-school-red"
-                      strokeWidth={1.6}
-                    />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <ButtonLink href={school.emailHref}>Email admissions</ButtonLink>
+                    {school.email}
+                  </a>
+                </p>
                 <a
                   href={mapHref}
                   target="_blank"

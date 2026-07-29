@@ -34,6 +34,7 @@ const routes = [
   ["/stories/learning-beyond-the-classroom", /Learning Beyond the Classroom/],
   ["/gallery", /Moments that tell the/],
   ["/contact", /Let’s begin the/],
+  ["/dashboard", /School Desk/],
 ];
 
 for (const [pathname, heading] of routes) {

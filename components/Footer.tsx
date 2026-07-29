@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowRight,
   Camera,
@@ -165,7 +166,7 @@ export function Footer() {
             Explore features from across the academy—from early discovery and
             student life to sport, creativity and learning beyond the classroom.
           </p>
-          <a
+          <Link
             href="/stories"
             className="mt-6 inline-flex items-center gap-3 border-b border-white/25 pb-3 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-school-gold transition-colors hover:border-school-gold hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-school-gold"
           >
@@ -176,7 +177,7 @@ export function Footer() {
             >
               <ArrowRight className="size-4" />
             </span>
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -184,12 +185,15 @@ export function Footer() {
         <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-6 text-[0.65rem] uppercase tracking-[0.12em] text-white/38 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-10">
           <p>© 2026 {school.name}. All rights reserved.</p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
-            <a href="/admissions" className="transition-colors hover:text-white">
+            <Link href="/admissions" className="transition-colors hover:text-white">
               Admissions
-            </a>
-            <a href="/contact" className="transition-colors hover:text-white">
+            </Link>
+            <Link href="/contact" className="transition-colors hover:text-white">
               Contact us
-            </a>
+            </Link>
+            <Link href="/dashboard" className="transition-colors hover:text-white">
+              Staff dashboard
+            </Link>
           </div>
         </div>
       </div>

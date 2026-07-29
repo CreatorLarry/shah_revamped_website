@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { StoryArticle } from "@/components/StoryArticle";
+import { getPublicStory } from "@/data/story-service";
 import { getStory } from "../../../data/stories";
 
 const story = getStory("learning-beyond-the-classroom")!;
@@ -10,6 +11,8 @@ export const metadata: Metadata = {
   alternates: { canonical: story.href },
 };
 
-export default function LearningBeyondTheClassroomPage() {
-  return <StoryArticle story={story} />;
+export const dynamic = "force-dynamic";
+
+export default async function LearningBeyondTheClassroomPage() {
+  return <StoryArticle story={(await getPublicStory(story.slug)) ?? story} />;
 }

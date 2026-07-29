@@ -11,15 +11,19 @@ import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Strengths } from "@/components/Strengths";
+import { getPublicStories } from "@/data/story-service";
 import {
   gallery,
   school,
   schoolLife,
   statistics,
 } from "@/data/site";
-import { stories } from "../data/stories";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const stories = await getPublicStories();
+
   return (
     <>
       <Header />
