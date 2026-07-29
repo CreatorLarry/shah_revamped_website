@@ -17,7 +17,7 @@ import {
   schoolLife,
   statistics,
 } from "@/data/site";
-import { stories } from "@/data/stories";
+import { stories } from "../data/stories";
 
 export default function Home() {
   return (

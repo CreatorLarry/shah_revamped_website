@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { StoryArticle } from "@/components/StoryArticle";
-import { getStory } from "@/data/stories";
+import { getStory } from "../../../data/stories";
 
 const story = getStory("confidence-to-compete")!;
 

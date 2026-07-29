@@ -7,7 +7,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { InteriorHero } from "@/components/InteriorHero";
 import { SectionHeading } from "@/components/SectionHeading";
-import { stories } from "@/data/stories";
+import { stories } from "../../data/stories";
 
 export const metadata: Metadata = {
   title: "School Stories | Shah Lalji Nangpar Academy",

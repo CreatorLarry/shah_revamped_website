@@ -4,7 +4,7 @@ import { ArrowLeft, Clock3 } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-import type { Story } from "@/data/stories";
+import type { Story } from "../data/stories";
 
 type StoryArticleProps = {
   story: Story;
