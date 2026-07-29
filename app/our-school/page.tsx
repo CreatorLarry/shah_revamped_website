@@ -101,6 +101,12 @@ export default function OurSchoolPage() {
                 <ButtonLink href="/education/school-profile" variant="ghost">
                   Read school profile
                 </ButtonLink>
+                <ButtonLink
+                  href="/our-school/senior-management-team"
+                  variant="ghost"
+                >
+                  Meet the SMT
+                </ButtonLink>
               </div>
             </div>
           </div>

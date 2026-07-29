@@ -1,4 +1,5 @@
-import { Check } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, Check } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
 import { ButtonLink } from "@/components/ButtonLink";
 import { Footer } from "@/components/Footer";
@@ -125,6 +126,51 @@ export function ContentDetailPage({ page }: ContentDetailPageProps) {
             ))}
           </div>
         </section>
+
+        {page.relatedLinks?.length ? (
+          <section className="bg-school-stone py-20 sm:py-24 lg:py-32">
+            <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10">
+              <SectionHeading
+                eyebrow="School leadership"
+                title={
+                  <>
+                    Hear directly from{" "}
+                    <span className="italic text-school-navy">
+                      those who lead.
+                    </span>
+                  </>
+                }
+                description="These are complete pages within this website—no external redirects."
+              />
+              <div className="mt-12 grid border-l border-t border-school-navy/15 md:grid-cols-3">
+                {page.relatedLinks.map((related) => (
+                  <Link
+                    key={related.href}
+                    href={related.href}
+                    className="group min-h-[310px] border-b border-r border-school-navy/15 bg-white p-7 transition-colors hover:bg-school-navy hover:text-white sm:p-8"
+                  >
+                    <p className="text-[0.64rem] font-bold uppercase tracking-[0.16em] text-school-red group-hover:text-school-gold">
+                      {related.eyebrow}
+                    </p>
+                    <h2 className="mt-8 font-serif text-3xl leading-tight text-school-ink transition-colors group-hover:text-white">
+                      {related.title}
+                    </h2>
+                    <p className="mt-5 text-sm leading-7 text-school-muted transition-colors group-hover:text-white/65">
+                      {related.description}
+                    </p>
+                    <span className="mt-8 inline-flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-school-navy transition-colors group-hover:text-school-gold">
+                      Read the full page
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                      />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         {page.notice ? (
           <section className="bg-school-navy py-20 text-white sm:py-24">

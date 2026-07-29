@@ -18,6 +18,12 @@ export const school = {
   },
 } as const;
 
+export const creator = {
+  name: "Mwangi Ngugi",
+  portfolioUrl:
+    process.env.NEXT_PUBLIC_CREATOR_PORTFOLIO_URL?.trim() ?? "",
+} as const;
+
 export const navigation = [
   {
     label: "Our School",
@@ -25,6 +31,18 @@ export const navigation = [
     children: [
       { label: "Our School Overview", href: "/our-school" },
       { label: "About Us", href: "/our-school/about-us" },
+      {
+        label: "Board Chair Message",
+        href: "/our-school/board-chair-message",
+      },
+      {
+        label: "Administrator Message",
+        href: "/our-school/school-administrator-message",
+      },
+      {
+        label: "Senior Management Team",
+        href: "/our-school/senior-management-team",
+      },
       { label: "School Profile", href: "/education/school-profile" },
     ],
   },

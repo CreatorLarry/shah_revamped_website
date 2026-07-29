@@ -30,6 +30,12 @@ export type ContentPage = {
     note: string;
   }[];
   sections: readonly ContentPageSection[];
+  relatedLinks?: readonly {
+    eyebrow: string;
+    title: string;
+    description: string;
+    href: string;
+  }[];
   notice?: {
     eyebrow: string;
     title: string;
@@ -103,6 +109,29 @@ export const contentPages = {
           "Support for emotional, social and academic growth",
           "Curiosity, kindness and lifelong learning",
         ],
+      },
+    ],
+    relatedLinks: [
+      {
+        eyebrow: "Board of Governors",
+        title: "Message from the Board Chair",
+        description:
+          "Read Mr Rajen Shah’s full welcome and his vision for learning, character and community.",
+        href: "/our-school/board-chair-message",
+      },
+      {
+        eyebrow: "School administration",
+        title: "Message from the School Administrator",
+        description:
+          "Read Ms Alice Okidia’s full message on safeguarding, wellbeing, academic ambition and partnership.",
+        href: "/our-school/school-administrator-message",
+      },
+      {
+        eyebrow: "Our people",
+        title: "Senior Management Team",
+        description:
+          "Meet the academic and operational leaders responsible for the academy’s day-to-day direction.",
+        href: "/our-school/senior-management-team",
       },
     ],
   },

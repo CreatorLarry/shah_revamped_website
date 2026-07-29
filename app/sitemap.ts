@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
 import { contentPages } from "@/data/content-pages";
+import { leadershipRoutes } from "@/data/leadership";
 import { stories } from "@/data/stories";
-
-const baseUrl = "https://shahlalji.ac.ke";
+import { getSiteOrigin } from "@/lib/site-origin";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const baseUrl = getSiteOrigin();
   const coreRoutes = [
     "",
     "/our-school",
@@ -18,7 +19,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const detailRoutes = Object.values(contentPages).map((page) => page.route);
   const storyRoutes = stories.map((story) => `/stories/${story.slug}`);
 
-  return [...coreRoutes, ...detailRoutes, ...storyRoutes].map((route) => ({
+  return [
+    ...coreRoutes,
+    ...detailRoutes,
+    ...leadershipRoutes,
+    ...storyRoutes,
+  ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: route.startsWith("/stories") ? "monthly" : "yearly",

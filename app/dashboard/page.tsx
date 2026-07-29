@@ -31,9 +31,9 @@ export default async function DashboardPage() {
     return (
       <DashboardAccessPage
         title="School Desk"
-        description="Sign in with an approved school account to manage stories and admissions enquiries."
+        description="Sign in with an explicitly approved administrator account to manage stories and admissions enquiries."
         actionHref={chatGPTSignInPath("/dashboard")}
-        actionLabel="Sign in securely"
+        actionLabel="Sign in with ChatGPT"
       />
     );
   }
@@ -122,8 +122,8 @@ function DashboardAccessPage({
             {actionLabel}
           </a>
           <p className="mt-7 max-w-md text-xs leading-6 text-school-muted">
-            Access is restricted to school-domain accounts and administrators
-            explicitly approved by SLNA.
+            Access is granted only to email addresses explicitly listed by the
+            site owner. No email domain receives automatic access.
           </p>
         </div>
       </section>

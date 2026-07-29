@@ -9,7 +9,7 @@ import {
   Network,
   Phone,
 } from "lucide-react";
-import { educationLinks, navigation, school } from "@/data/site";
+import { creator, educationLinks, navigation, school } from "@/data/site";
 
 export function Footer() {
   return (
@@ -194,6 +194,23 @@ export function Footer() {
             <Link href="/dashboard" className="transition-colors hover:text-white">
               Staff dashboard
             </Link>
+            {creator.portfolioUrl ? (
+              <a
+                href={creator.portfolioUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-school-gold transition-colors hover:text-white"
+              >
+                Created by {creator.name}
+              </a>
+            ) : (
+              <span
+                className="text-school-gold"
+                title="Portfolio link will be added when the new portfolio is ready"
+              >
+                Created by {creator.name}
+              </span>
+            )}
           </div>
         </div>
       </div>

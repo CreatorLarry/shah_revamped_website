@@ -1,17 +1,13 @@
 import { getChatGPTUser, type ChatGPTUser } from "@/app/chatgpt-auth";
 
-const SCHOOL_EMAIL_DOMAIN = "@shahlalji.ac.ke";
-
 export function isDashboardAdmin(email: string): boolean {
   const normalisedEmail = email.trim().toLowerCase();
-  if (normalisedEmail.endsWith(SCHOOL_EMAIL_DOMAIN)) return true;
-
-  const additionalAdmins = (process.env.DASHBOARD_ALLOWED_EMAILS ?? "")
+  const approvedAdmins = (process.env.DASHBOARD_ALLOWED_EMAILS ?? "")
     .split(",")
     .map((value) => value.trim().toLowerCase())
     .filter(Boolean);
 
-  return additionalAdmins.includes(normalisedEmail);
+  return approvedAdmins.includes(normalisedEmail);
 }
 
 export async function getDashboardUser(): Promise<ChatGPTUser | null> {

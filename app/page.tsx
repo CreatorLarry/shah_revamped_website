@@ -207,9 +207,7 @@ export default async function Home() {
                   </p>
                 </div>
                 <a
-                  href="https://shahlalji.ac.ke/our-school/about-us/"
-                  target="_blank"
-                  rel="noreferrer"
+                  href="/our-school/board-chair-message"
                   className="group inline-flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-school-navy transition-colors hover:text-school-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-navy"
                 >
                   Read the full message

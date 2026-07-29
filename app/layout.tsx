@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { headers } from "next/headers";
+import { getSiteOrigin } from "@/lib/site-origin";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol =
     requestHeaders.get("x-forwarded-proto") ??
     (host?.startsWith("localhost") ? "http" : "https");
-  const origin = host ? `${protocol}://${host}` : "https://shahlalji.ac.ke";
+  const origin = host ? `${protocol}://${host}` : getSiteOrigin();
   const socialImage = `${origin}/og.png`;
 
   return {

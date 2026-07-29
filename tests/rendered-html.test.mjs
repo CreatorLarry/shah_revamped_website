@@ -26,6 +26,9 @@ const routes = [
   ["/", /An Education That Inspires/],
   ["/our-school", /A community with a/],
   ["/our-school/about-us", /Leadership grounded in/],
+  ["/our-school/board-chair-message", /A shared commitment to/],
+  ["/our-school/school-administrator-message", /A safe place to learn/],
+  ["/our-school/senior-management-team", /Leadership across/],
   ["/education", /Learning that moves/],
   ["/education/school-profile", /A Nakuru legacy with a/],
   ["/education/nursery", /Curiosity starts/],
@@ -56,14 +59,18 @@ for (const [pathname, heading] of routes) {
     assert.match(html, heading);
     assert.match(html, /Shah Lalji Nangpar Academy/i);
     assert.doesNotMatch(html, /Your site is taking shape|Building your site/i);
+    assert.doesNotMatch(html, /https?:\/\/shahlalji\.ac\.ke/i);
   });
 }
 
-test("main navigation exposes every audited official-site detail page", async () => {
+test("main navigation exposes every public detail page", async () => {
   const response = await render("/");
   const html = await response.text();
   const detailRoutes = [
     "/our-school/about-us",
+    "/our-school/board-chair-message",
+    "/our-school/school-administrator-message",
+    "/our-school/senior-management-team",
     "/education/school-profile",
     "/education/nursery",
     "/education/junior-school",
@@ -77,14 +84,27 @@ test("main navigation exposes every audited official-site detail page", async ()
   for (const route of detailRoutes) {
     assert.match(html, new RegExp(`href="${route}"`));
   }
+
+  assert.doesNotMatch(html, /https?:\/\/shahlalji\.ac\.ke/i);
+  assert.match(html, /Created by/);
+  assert.match(html, /Mwangi Ngugi/);
 });
 
-test("sitemap includes the audited official-site detail pages", async () => {
+test("sitemap is host-configurable and includes every leadership page", async () => {
   const response = await render("/sitemap.xml");
   assert.equal(response.status, 200);
   const xml = await response.text();
 
-  assert.match(xml, /https:\/\/shahlalji\.ac\.ke\/our-school\/about-us/);
-  assert.match(xml, /https:\/\/shahlalji\.ac\.ke\/education\/igcse/);
-  assert.match(xml, /https:\/\/shahlalji\.ac\.ke\/admissions\/fee-structure/);
+  assert.match(xml, /http:\/\/localhost:3000\/our-school\/about-us/);
+  assert.match(xml, /http:\/\/localhost:3000\/our-school\/board-chair-message/);
+  assert.match(
+    xml,
+    /http:\/\/localhost:3000\/our-school\/school-administrator-message/,
+  );
+  assert.match(
+    xml,
+    /http:\/\/localhost:3000\/our-school\/senior-management-team/,
+  );
+  assert.match(xml, /http:\/\/localhost:3000\/education\/igcse/);
+  assert.doesNotMatch(xml, /shahlalji\.ac\.ke/i);
 });

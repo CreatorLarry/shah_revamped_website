@@ -8,6 +8,9 @@ Academy. Built with Next.js, TypeScript, Tailwind CSS and Lucide icons.
 - Homepage: `/`
 - Our School: `/our-school`
   - About Us: `/our-school/about-us`
+  - Message from the Board Chair: `/our-school/board-chair-message`
+  - Message from the School Administrator: `/our-school/school-administrator-message`
+  - Senior Management Team: `/our-school/senior-management-team`
 - Education: `/education`
   - School Profile: `/education/school-profile`
   - Early Years & Nursery: `/education/nursery`
@@ -27,9 +30,8 @@ Academy. Built with Next.js, TypeScript, Tailwind CSS and Lucide icons.
 - Contact Us: `/contact`
 - Staff Dashboard: `/dashboard`
 
-The page structure and factual school content are based on the current official
-website at `http://shahlalji.ac.ke/`. The new site retains the Phase 1 visual
-direction while improving the content hierarchy, navigation and presentation.
+This is an independent website project. Its content, routes, metadata, sitemap
+and dashboard do not redirect to or depend on a previous website deployment.
 
 ## Install and run
 
@@ -54,13 +56,14 @@ Generate database migrations after schema changes with:
 npm run db:generate
 ```
 
-Dashboard access uses ChatGPT sign-in and is restricted to accounts on the
-`shahlalji.ac.ke` domain plus any additional email addresses listed in the
-hosted `DASHBOARD_ALLOWED_EMAILS` environment variable. Copy `.env.example`
-when local configuration is needed.
+Dashboard access uses ChatGPT sign-in and an explicit email allowlist in the
+hosted `DASHBOARD_ALLOWED_EMAILS` environment variable. No email domain is
+trusted automatically. Copy `.env.example` when local configuration is needed.
 
-For Vercel, connect the repository normally. The `vercel-build` script runs the
-standard Next.js production build.
+Hosting and the public domain are intentionally deferred until the site owner
+approves launch. At that point, set `NEXT_PUBLIC_SITE_URL` to the selected
+origin. The creator credit can be linked later by setting
+`NEXT_PUBLIC_CREATOR_PORTFOLIO_URL`.
 
 ## Logo and photography
 
@@ -75,7 +78,8 @@ academic journey, school-life, story preview and gallery sections.
 
 - Contact details, navigation, academic stages, statistics and gallery entries:
   `data/site.ts`
-- Official-site detail page content: `data/content-pages.ts`
+- Public detail page content: `data/content-pages.ts`
+- Leadership messages and SMT structure: `data/leadership.ts`
 - School story content: `data/stories.ts`
 - Dashboard and enquiry storage: `db/dashboard.ts`
 - Database schema and migrations: `db/schema.ts` and `drizzle/`

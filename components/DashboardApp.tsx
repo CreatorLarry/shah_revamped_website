@@ -421,8 +421,8 @@ function OverviewPanel({
               Secure access
             </p>
             <p className="mt-2 text-xs leading-6 text-white/55">
-              School-domain accounts and explicitly approved administrators
-              only.
+              Only administrator email addresses explicitly approved by the
+              site owner can open this workspace.
             </p>
           </div>
         </section>
