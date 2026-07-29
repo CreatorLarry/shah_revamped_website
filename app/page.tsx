@@ -16,8 +16,8 @@ import {
   school,
   schoolLife,
   statistics,
-  stories,
 } from "@/data/site";
+import { stories } from "@/data/stories";
 
 export default function Home() {
   return (
@@ -160,16 +160,13 @@ export default function Home() {
             <div className="relative lg:col-span-5">
               <div className="relative aspect-[3/4] overflow-hidden bg-school-ink">
                 <Image
-                  src="/images/chairman-portrait.jpg"
-                  alt="Placeholder for the official portrait of Mr Rajen Shah"
+                  src="/images/school/school-event-leadership.webp"
+                  alt="School leadership speaking with learners during an academy event"
                   fill
                   unoptimized
                   sizes="(max-width: 1024px) 100vw, 42vw"
                   className="object-cover"
                 />
-              </div>
-              <div className="absolute -bottom-5 right-0 bg-school-red px-5 py-4 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-white sm:-right-5">
-                Official portrait to be supplied
               </div>
             </div>
 
@@ -303,8 +300,8 @@ export default function Home() {
                 </h2>
               </div>
               <p className="max-w-md text-sm leading-7 text-school-muted">
-                Unavailable figures remain intentionally blank until the school
-                supplies verified numbers.
+                A concise view of the school’s verified structure, location and
+                educational pathway.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4">

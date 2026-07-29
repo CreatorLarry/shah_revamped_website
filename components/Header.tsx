@@ -47,12 +47,6 @@ export function Header() {
             </a>
           </div>
           <div className="flex items-center gap-4">
-            <span className="hidden text-white/50 xl:inline">
-              Parent Portal · Coming soon
-            </span>
-            <span className="hidden text-white/50 xl:inline">
-              Student Portal · Coming soon
-            </span>
             <a
               href="/contact"
               className="border-l border-white/20 pl-4 text-school-gold transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-school-gold"
@@ -86,7 +80,7 @@ export function Header() {
             </span>
           </Link>
 
-          <nav aria-label="Main navigation" className="hidden lg:block">
+          <nav aria-label="Main navigation" className="hidden xl:block">
             <ul className="flex items-center gap-1 xl:gap-2">
               {navigation.map((item) => (
                 <li key={item.href}>
@@ -119,7 +113,7 @@ export function Header() {
               aria-controls="mobile-navigation"
               aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
               onClick={() => setMenuOpen((open) => !open)}
-              className="inline-flex size-12 items-center justify-center rounded-[3px] border border-school-navy/15 text-school-navy transition-colors hover:bg-school-navy hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-navy lg:hidden"
+              className="inline-flex size-12 items-center justify-center rounded-[3px] border border-school-navy/15 text-school-navy transition-colors hover:bg-school-navy hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-navy xl:hidden"
             >
               {menuOpen ? (
                 <X aria-hidden="true" className="size-6" />
@@ -133,7 +127,7 @@ export function Header() {
         <nav
           id="mobile-navigation"
           aria-label="Mobile navigation"
-          className={`absolute inset-x-0 top-full overflow-hidden border-t border-school-navy/10 bg-white shadow-xl transition-[max-height,opacity] duration-300 lg:hidden ${
+          className={`absolute inset-x-0 top-full overflow-hidden border-t border-school-navy/10 bg-white shadow-xl transition-[max-height,opacity] duration-300 xl:hidden ${
             menuOpen ? "max-h-[640px] opacity-100" : "pointer-events-none max-h-0 opacity-0"
           }`}
         >
@@ -174,12 +168,6 @@ export function Header() {
                 <Mail aria-hidden="true" className="size-4" />
                 {school.email}
               </a>
-              <span className="py-2 text-school-muted/70">
-                Parent Portal · Coming soon
-              </span>
-              <span className="py-2 text-school-muted/70">
-                Student Portal · Coming soon
-              </span>
             </div>
           </div>
         </nav>

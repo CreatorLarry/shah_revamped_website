@@ -21,30 +21,30 @@ export function InteriorHero({
 }: InteriorHeroProps) {
   return (
     <section className="overflow-hidden bg-school-navy text-white">
-      <div className="mx-auto grid min-h-[610px] max-w-[1600px] lg:grid-cols-12">
-        <div className="relative z-10 flex items-end px-4 py-16 sm:px-6 sm:py-20 lg:col-span-6 lg:px-10 lg:py-24 xl:pl-[max(2.5rem,calc((100vw-1440px)/2+2.5rem))]">
+      <div className="mx-auto grid min-h-[520px] max-w-[1600px] lg:min-h-[590px] lg:grid-cols-12">
+        <div className="relative z-10 flex items-center px-4 py-14 sm:px-6 sm:py-16 lg:col-span-6 lg:px-10 lg:py-20 xl:pl-[max(2.5rem,calc((100vw-1440px)/2+2.5rem))]">
           <div className="max-w-[720px]">
             <Link
               href="/"
-              className="mb-8 inline-flex items-center gap-3 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/55 transition-colors hover:text-school-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-gold"
+              className="mb-7 inline-flex items-center gap-3 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/55 transition-colors hover:text-school-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-school-gold"
             >
               <span aria-hidden="true">←</span>
               Home
             </Link>
-            <p className="mb-6 flex items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.21em] text-school-gold">
+            <p className="mb-5 flex items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.21em] text-school-gold">
               <span aria-hidden="true" className="h-px w-9 bg-school-gold" />
               {eyebrow}
             </p>
-            <h1 className="font-serif text-[clamp(3.25rem,7vw,6.9rem)] leading-[0.9] tracking-[-0.052em]">
+            <h1 className="font-serif text-[clamp(3.05rem,6.5vw,6.35rem)] leading-[0.92] tracking-[-0.05em]">
               {title}
             </h1>
-            <p className="mt-7 max-w-2xl text-base leading-8 text-white/72 sm:text-lg">
+            <p className="mt-6 max-w-2xl text-base leading-8 text-white/72 sm:text-lg">
               {description}
             </p>
           </div>
         </div>
 
-        <div className="relative min-h-[420px] lg:col-span-6 lg:min-h-full">
+        <div className="relative min-h-[390px] lg:col-span-6 lg:min-h-full">
           <Image
             src={image}
             alt={imageAlt}

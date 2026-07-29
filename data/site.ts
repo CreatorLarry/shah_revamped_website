@@ -23,6 +23,7 @@ export const navigation = [
   { label: "Education", href: "/education" },
   { label: "Admissions", href: "/admissions" },
   { label: "School Life", href: "/school-life" },
+  { label: "Stories", href: "/stories" },
   { label: "Gallery", href: "/gallery" },
   { label: "Contact", href: "/contact" },
 ] as const;
@@ -127,19 +128,7 @@ export const schoolLife = [
   "Community engagement",
 ] as const;
 
-// TODO(content): Replace each unavailable value only after the school provides
-// a verified figure. The homepage intentionally renders an em dash until then.
 export const statistics = [
-  {
-    label: "Learners",
-    value: "—",
-    note: "Verified figure to be supplied",
-  },
-  {
-    label: "Years of excellence",
-    value: "—",
-    note: "Verified figure to be supplied",
-  },
   {
     label: "Academic divisions",
     value: "4",
@@ -148,37 +137,17 @@ export const statistics = [
   {
     label: "Learner age range",
     value: "2–18",
-    note: "As stated on the current school website",
-  },
-] as const;
-
-export const stories = [
-  {
-    category: "School life",
-    title: "Inside a Day at SLNA",
-    excerpt:
-      "Discover the relationships, opportunities and experiences that shape everyday life across the academy.",
-    image: "/images/school/outdoor-study.webp",
-    alt: "A learner focused on her work during an outdoor study session",
-    href: "/school-life",
+    note: "A connected educational journey",
   },
   {
-    category: "Education",
-    title: "The Cambridge Journey, Explained",
-    excerpt:
-      "See how learning progresses from strong early foundations through IGCSE and A-Level.",
-    image: "/images/school/early-years-fruit-learning.webp",
-    alt: "Teachers and Early Years learners exploring fruit in the classroom",
-    href: "/education",
+    label: "Curriculum",
+    value: "Cambridge",
+    note: "Internationally recognised pathway",
   },
   {
-    category: "Our school",
-    title: "Meet Our Learning Community",
-    excerpt:
-      "Learn more about the values and shared purpose that bring learners, families and staff together.",
-    image: "/images/school/senior-students-community.webp",
-    alt: "A diverse group of SLNA senior students in their school blazers",
-    href: "/our-school",
+    label: "Home city",
+    value: "Nakuru",
+    note: "A co-educational day school",
   },
 ] as const;
 

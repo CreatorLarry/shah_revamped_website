@@ -10,6 +10,10 @@ Academy. Built with Next.js, TypeScript, Tailwind CSS and Lucide icons.
 - Education: `/education`
 - Admissions: `/admissions`
 - School Life: `/school-life`
+- School Stories: `/stories`
+  - Learning Through Discovery: `/stories/learning-through-discovery`
+  - Confidence to Compete: `/stories/confidence-to-compete`
+  - Learning Beyond the Classroom: `/stories/learning-beyond-the-classroom`
 - Photo Gallery: `/gallery`
 - Contact Us: `/contact`
 
@@ -39,21 +43,17 @@ standard Next.js production build.
 ## Logo and photography
 
 - Official logo: `public/images/school-logo.png`
-- Chairman portrait: `public/images/chairman-portrait.jpg`
 - Supplied school photography: `public/images/school/`
 - Photo preparation script: `scripts/process-school-photos.mjs`
 
 The homepage now uses supplied school photography throughout the hero,
-academic journey, school-life, story preview and gallery sections. The chairman
-portrait remains a temporary image until an official portrait is supplied.
+academic journey, school-life, story preview and gallery sections.
 
 ## Update school content
 
-- Contact details, navigation, academic stages, statistics, stories and gallery
-  entries: `data/site.ts`
+- Contact details, navigation, academic stages, statistics and gallery entries:
+  `data/site.ts`
+- School story content: `data/stories.ts`
 - Homepage section layout: `app/page.tsx`
 - Shared components: `components/`
 - Colour and typography tokens: `app/globals.css`
-
-Unverified statistics and sample story content are clearly marked with
-`TODO(content)` comments in `data/site.ts`.

@@ -28,6 +28,10 @@ const routes = [
   ["/education", /Learning that moves/],
   ["/admissions", /Your family’s journey/],
   ["/school-life", /Space to discover/],
+  ["/stories", /Experiences that shape/],
+  ["/stories/learning-through-discovery", /Learning Through Discovery/],
+  ["/stories/confidence-to-compete", /Confidence to Compete/],
+  ["/stories/learning-beyond-the-classroom", /Learning Beyond the Classroom/],
   ["/gallery", /Moments that tell the/],
   ["/contact", /Let’s begin the/],
 ];
