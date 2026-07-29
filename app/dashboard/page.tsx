@@ -9,7 +9,10 @@ import {
 } from "@/app/chatgpt-auth";
 import { DashboardApp } from "@/components/DashboardApp";
 import { getDashboardSnapshot, type DashboardSnapshot } from "@/db/dashboard";
-import { isDashboardAdmin } from "@/lib/dashboard-auth";
+import {
+  getLocalDashboardUser,
+  isDashboardAdmin,
+} from "@/lib/dashboard-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +28,8 @@ const emptySnapshot: DashboardSnapshot = {
 };
 
 export default async function DashboardPage() {
-  const user = await getChatGPTUser();
+  const localPreviewUser = getLocalDashboardUser();
+  const user = localPreviewUser ?? (await getChatGPTUser());
 
   if (!user) {
     return (
@@ -38,7 +42,7 @@ export default async function DashboardPage() {
     );
   }
 
-  if (!isDashboardAdmin(user.email)) {
+  if (!localPreviewUser && !isDashboardAdmin(user.email)) {
     return (
       <DashboardAccessPage
         title="Access not approved"
@@ -64,6 +68,7 @@ export default async function DashboardPage() {
       displayName={user.displayName}
       email={user.email}
       signOutHref={chatGPTSignOutPath("/")}
+      accessMode={localPreviewUser ? "local-preview" : "platform"}
       initialSnapshot={snapshot}
       initialError={databaseError}
     />

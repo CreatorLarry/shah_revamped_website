@@ -60,6 +60,10 @@ Dashboard access uses ChatGPT sign-in and an explicit email allowlist in the
 hosted `DASHBOARD_ALLOWED_EMAILS` environment variable. No email domain is
 trusted automatically. Copy `.env.example` when local configuration is needed.
 
+For local dashboard testing, set `DASHBOARD_LOCAL_PREVIEW=true` in the ignored
+`.env.local` file. This opens the dashboard directly during `npm run dev` and
+is hard-disabled when `NODE_ENV` is `production`.
+
 Hosting and the public domain are intentionally deferred until the site owner
 approves launch. At that point, set `NEXT_PUBLIC_SITE_URL` to the selected
 origin. The creator credit can be linked later by setting

@@ -108,3 +108,11 @@ test("sitemap is host-configurable and includes every leadership page", async ()
   assert.match(xml, /http:\/\/localhost:3000\/education\/igcse/);
   assert.doesNotMatch(xml, /shahlalji\.ac\.ke/i);
 });
+
+test("production dashboard APIs stay protected when local preview is configured", async () => {
+  const response = await render("/api/dashboard/stories");
+  assert.equal(response.status, 401);
+
+  const payload = await response.json();
+  assert.match(payload.error, /Sign in is required/i);
+});

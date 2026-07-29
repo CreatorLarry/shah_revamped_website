@@ -25,6 +25,7 @@ import type {
   DashboardStory,
   Enquiry,
 } from "@/db/dashboard";
+import type { DashboardAccessMode } from "@/lib/dashboard-auth";
 
 type DashboardSection = "overview" | "stories" | "enquiries";
 
@@ -32,6 +33,7 @@ type DashboardAppProps = {
   displayName: string;
   email: string;
   signOutHref: string;
+  accessMode: DashboardAccessMode;
   initialSnapshot: DashboardSnapshot;
   initialError?: string;
 };
@@ -52,6 +54,7 @@ export function DashboardApp({
   displayName,
   email,
   signOutHref,
+  accessMode,
   initialSnapshot,
   initialError,
 }: DashboardAppProps) {
@@ -142,7 +145,7 @@ export function DashboardApp({
             className="mt-2 flex min-h-11 items-center gap-3 px-3 text-xs font-bold uppercase tracking-[0.12em] text-white/58 transition-colors hover:text-school-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-school-gold"
           >
             <LogOut aria-hidden="true" className="size-4" />
-            Sign out
+            {accessMode === "local-preview" ? "Exit preview" : "Sign out"}
           </a>
         </div>
       </aside>
@@ -175,6 +178,11 @@ export function DashboardApp({
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {accessMode === "local-preview" ? (
+                <span className="hidden border border-school-gold/50 bg-school-gold/10 px-3 py-2 text-[0.6rem] font-bold uppercase tracking-[0.13em] text-school-navy sm:inline-flex">
+                  Local preview
+                </span>
+              ) : null}
               <Link
                 href="/"
                 target="_blank"
