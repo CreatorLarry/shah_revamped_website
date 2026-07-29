@@ -19,9 +19,36 @@ export const school = {
 } as const;
 
 export const navigation = [
-  { label: "Our School", href: "/our-school" },
-  { label: "Education", href: "/education" },
-  { label: "Admissions", href: "/admissions" },
+  {
+    label: "Our School",
+    href: "/our-school",
+    children: [
+      { label: "Our School Overview", href: "/our-school" },
+      { label: "About Us", href: "/our-school/about-us" },
+      { label: "School Profile", href: "/education/school-profile" },
+    ],
+  },
+  {
+    label: "Education",
+    href: "/education",
+    children: [
+      { label: "Education Overview", href: "/education" },
+      { label: "Early Years", href: "/education/nursery" },
+      { label: "Junior School", href: "/education/junior-school" },
+      { label: "Senior School", href: "/education/senior-school" },
+      { label: "IGCSE", href: "/education/igcse" },
+      { label: "A-Level", href: "/education/a-level" },
+      { label: "Homework Policy", href: "/education/homework-policy" },
+    ],
+  },
+  {
+    label: "Admissions",
+    href: "/admissions",
+    children: [
+      { label: "Admissions Overview", href: "/admissions" },
+      { label: "Fee Structure", href: "/admissions/fee-structure" },
+    ],
+  },
   { label: "School Life", href: "/school-life" },
   { label: "Stories", href: "/stories" },
   { label: "Gallery", href: "/gallery" },
@@ -58,7 +85,7 @@ export const academicJourney = [
       "A warm, purposeful start where play, curiosity and early learning build confidence for the journey ahead.",
     image: "/images/school/early-years-fruit-learning.webp",
     alt: "Early Years learners exploring different fruits with their teachers",
-    href: "/education#early-years",
+    href: "/education/nursery",
   },
   {
     index: "02",
@@ -68,7 +95,7 @@ export const academicJourney = [
       "Engaging Cambridge-aligned learning that develops strong foundations, inquiry and a growing sense of independence.",
     image: "/images/school/chess-club.webp",
     alt: "Junior School learners concentrating during a chess activity",
-    href: "/education#junior-school",
+    href: "/education/junior-school",
   },
   {
     index: "03",
@@ -78,7 +105,7 @@ export const academicJourney = [
       "A broad and inclusive programme that deepens subject knowledge, critical thinking and personal responsibility.",
     image: "/images/school/outdoor-study.webp",
     alt: "A Senior School learner writing during an outdoor study session",
-    href: "/education#senior-school",
+    href: "/education/senior-school",
   },
   {
     index: "04",
@@ -88,8 +115,17 @@ export const academicJourney = [
       "A focused two-year pathway that prepares ambitious learners for university, leadership and life beyond school.",
     image: "/images/school/museum-learning-trip.webp",
     alt: "Senior learners taking part in an educational museum visit",
-    href: "/education#a-level",
+    href: "/education/a-level",
   },
+] as const;
+
+export const educationLinks = [
+  { label: "Early Years", href: "/education/nursery" },
+  { label: "Junior School", href: "/education/junior-school" },
+  { label: "Senior School", href: "/education/senior-school" },
+  { label: "IGCSE", href: "/education/igcse" },
+  { label: "A-Level", href: "/education/a-level" },
+  { label: "Homework Policy", href: "/education/homework-policy" },
 ] as const;
 
 export const strengths = [

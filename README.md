@@ -7,8 +7,17 @@ Academy. Built with Next.js, TypeScript, Tailwind CSS and Lucide icons.
 
 - Homepage: `/`
 - Our School: `/our-school`
+  - About Us: `/our-school/about-us`
 - Education: `/education`
+  - School Profile: `/education/school-profile`
+  - Early Years & Nursery: `/education/nursery`
+  - Junior School: `/education/junior-school`
+  - Senior School: `/education/senior-school`
+  - IGCSE: `/education/igcse`
+  - A-Level: `/education/a-level`
+  - Homework & Assessment Policy: `/education/homework-policy`
 - Admissions: `/admissions`
+  - Fee Structure: `/admissions/fee-structure`
 - School Life: `/school-life`
 - School Stories: `/stories`
   - Learning Through Discovery: `/stories/learning-through-discovery`
@@ -66,6 +75,7 @@ academic journey, school-life, story preview and gallery sections.
 
 - Contact details, navigation, academic stages, statistics and gallery entries:
   `data/site.ts`
+- Official-site detail page content: `data/content-pages.ts`
 - School story content: `data/stories.ts`
 - Dashboard and enquiry storage: `db/dashboard.ts`
 - Database schema and migrations: `db/schema.ts` and `drizzle/`

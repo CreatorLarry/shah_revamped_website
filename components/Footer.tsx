@@ -9,7 +9,7 @@ import {
   Network,
   Phone,
 } from "lucide-react";
-import { academicJourney, navigation, school } from "@/data/site";
+import { educationLinks, navigation, school } from "@/data/site";
 
 export function Footer() {
   return (
@@ -145,13 +145,13 @@ export function Footer() {
             Education
           </h2>
           <ul className="mt-6 space-y-3">
-            {academicJourney.map((stage) => (
-              <li key={stage.title}>
+            {educationLinks.map((stage) => (
+              <li key={stage.href}>
                 <a
                   href={stage.href}
                   className="text-sm text-white/62 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-school-gold"
                 >
-                  {stage.title}
+                  {stage.label}
                 </a>
               </li>
             ))}

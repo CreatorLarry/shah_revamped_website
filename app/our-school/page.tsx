@@ -7,6 +7,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
+import { ButtonLink } from "@/components/ButtonLink";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { InteriorHero } from "@/components/InteriorHero";
@@ -93,6 +94,14 @@ export default function OurSchoolPage() {
                 classroom. The result is a community where learners can grow in
                 confidence while preparing for university, leadership and life.
               </p>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <ButtonLink href="/our-school/about-us" variant="ghost">
+                  About our leadership
+                </ButtonLink>
+                <ButtonLink href="/education/school-profile" variant="ghost">
+                  Read school profile
+                </ButtonLink>
+              </div>
             </div>
           </div>
 

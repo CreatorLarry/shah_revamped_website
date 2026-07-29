@@ -211,9 +211,14 @@ export default function AdmissionsPage() {
             ))}
           </div>
           <div className="mx-auto mt-10 flex max-w-[1440px] px-4 sm:px-6 lg:px-10">
-            <ButtonLink href="/contact" variant="light">
-              Speak with admissions
-            </ButtonLink>
+            <div className="flex flex-wrap gap-3">
+              <ButtonLink href="/contact" variant="light">
+                Speak with admissions
+              </ButtonLink>
+              <ButtonLink href="/admissions/fee-structure" variant="outline">
+                View fee structure
+              </ButtonLink>
+            </div>
           </div>
         </section>
 

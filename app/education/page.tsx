@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Languages, Palette, Sparkles, Trophy } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
+import { ButtonLink } from "@/components/ButtonLink";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { InteriorHero } from "@/components/InteriorHero";
@@ -164,6 +165,16 @@ export default function EducationPage() {
                         </li>
                       ))}
                     </ul>
+                    <div className="mt-8 flex flex-wrap gap-3">
+                      <ButtonLink href={stage.href} variant="ghost">
+                        Explore {stage.title}
+                      </ButtonLink>
+                      {stage.title === "Senior School" ? (
+                        <ButtonLink href="/education/igcse" variant="ghost">
+                          Explore IGCSE
+                        </ButtonLink>
+                      ) : null}
+                    </div>
                   </div>
                 </article>
               );
@@ -217,6 +228,11 @@ export default function EducationPage() {
                   </p>
                 </article>
               ))}
+            </div>
+            <div className="mt-10 flex">
+              <ButtonLink href="/education/homework-policy" variant="outline">
+                Read homework & assessment policy
+              </ButtonLink>
             </div>
           </div>
         </section>

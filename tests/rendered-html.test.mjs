@@ -25,8 +25,17 @@ async function render(pathname) {
 const routes = [
   ["/", /An Education That Inspires/],
   ["/our-school", /A community with a/],
+  ["/our-school/about-us", /Leadership grounded in/],
   ["/education", /Learning that moves/],
+  ["/education/school-profile", /A Nakuru legacy with a/],
+  ["/education/nursery", /Curiosity starts/],
+  ["/education/junior-school", /Strong foundations for/],
+  ["/education/senior-school", /Depth, direction and/],
+  ["/education/igcse", /Globally recognised/],
+  ["/education/a-level", /Focused study/],
+  ["/education/homework-policy", /Purposeful practice/],
   ["/admissions", /Your family’s journey/],
+  ["/admissions/fee-structure", /Clear information for/],
   ["/school-life", /Space to discover/],
   ["/stories", /Experiences that shape/],
   ["/stories/learning-through-discovery", /Learning Through Discovery/],
@@ -49,3 +58,33 @@ for (const [pathname, heading] of routes) {
     assert.doesNotMatch(html, /Your site is taking shape|Building your site/i);
   });
 }
+
+test("main navigation exposes every audited official-site detail page", async () => {
+  const response = await render("/");
+  const html = await response.text();
+  const detailRoutes = [
+    "/our-school/about-us",
+    "/education/school-profile",
+    "/education/nursery",
+    "/education/junior-school",
+    "/education/senior-school",
+    "/education/igcse",
+    "/education/a-level",
+    "/education/homework-policy",
+    "/admissions/fee-structure",
+  ];
+
+  for (const route of detailRoutes) {
+    assert.match(html, new RegExp(`href="${route}"`));
+  }
+});
+
+test("sitemap includes the audited official-site detail pages", async () => {
+  const response = await render("/sitemap.xml");
+  assert.equal(response.status, 200);
+  const xml = await response.text();
+
+  assert.match(xml, /https:\/\/shahlalji\.ac\.ke\/our-school\/about-us/);
+  assert.match(xml, /https:\/\/shahlalji\.ac\.ke\/education\/igcse/);
+  assert.match(xml, /https:\/\/shahlalji\.ac\.ke\/admissions\/fee-structure/);
+});
