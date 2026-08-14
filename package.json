@@ -12,6 +12,7 @@
     "vercel-build": "next build",
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "photos:audit": "node scripts/audit-site-photos.mjs",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

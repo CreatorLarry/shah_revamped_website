@@ -74,6 +74,13 @@ origin. The creator credit can be linked later by setting
 - Official logo: `public/images/school-logo.png`
 - Supplied school photography: `public/images/school/`
 - Photo preparation script: `scripts/process-school-photos.mjs`
+- Current photo usage map: `PHOTO-INVENTORY.md`
+
+Regenerate the usage map after changing image files or page assignments with:
+
+```bash
+npm run photos:audit
+```
 
 The homepage now uses supplied school photography throughout the hero,
 academic journey, school-life, story preview and gallery sections.
