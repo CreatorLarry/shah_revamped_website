@@ -58,7 +58,7 @@ export async function POST(request: Request) {
         quote,
         status,
       },
-      access.user.email,
+      access.user.id,
     );
 
     return Response.json({ ok: true, storyId }, { status: 201 });

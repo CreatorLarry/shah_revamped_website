@@ -29,6 +29,7 @@ export function ContentDetailPage({ page }: ContentDetailPageProps) {
           }
           description={page.hero.description}
           image={page.hero.image}
+          imageKey={`content.${page.route.slice(1).replaceAll("/", ".")}.hero`}
           imageAlt={page.hero.imageAlt}
           imagePosition={page.hero.imagePosition}
         />

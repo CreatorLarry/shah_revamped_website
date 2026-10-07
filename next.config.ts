@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
     // relying on a platform-specific image service while preserving next/image
     // sizing, lazy loading and layout stability.
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
   },
 };
 

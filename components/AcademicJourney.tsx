@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import { ArrowUpRight } from "lucide-react";
 import { academicJourney } from "@/data/site";
 
@@ -32,6 +32,7 @@ export function AcademicJourney() {
             <div className="relative aspect-[7/4] overflow-hidden bg-school-navy">
               <Image
                 src={stage.image}
+                imageKey={`home.journey.${stage.index}`}
                 alt={stage.alt}
                 fill
                 unoptimized

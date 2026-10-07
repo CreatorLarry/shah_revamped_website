@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
 import { EnquiryForm } from "@/components/EnquiryForm";
 import { Footer } from "@/components/Footer";
@@ -33,6 +33,7 @@ export default function ContactPage() {
           }
           description="Ask a question, discuss the right academic stage or arrange a visit. Our team is ready to help your family take the next step."
           image="/images/school/school-event-leadership.webp"
+          imageKey="contact.hero"
           imageAlt="School leaders speaking with learners during an academy event"
         />
 
@@ -110,6 +111,7 @@ export default function ContactPage() {
             <div className="relative aspect-[7/6] overflow-hidden bg-school-stone lg:col-span-6">
               <Image
                 src="/images/school/campus-assembly.webp"
+                imageKey="contact.visit"
                 alt="SLNA learners gathered for an assembly in the school courtyard"
                 fill
                 unoptimized

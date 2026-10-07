@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
 import { ArrowLeft, Clock3 } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
@@ -18,6 +18,7 @@ export function StoryArticle({ story }: StoryArticleProps) {
         <header className="relative isolate flex min-h-[680px] items-end overflow-hidden bg-school-navy text-white">
           <Image
             src={story.image}
+            imageKey={`story.${story.slug}.hero`}
             alt={story.alt}
             fill
             unoptimized
@@ -101,6 +102,7 @@ export function StoryArticle({ story }: StoryArticleProps) {
                           <div className="relative aspect-[8/5] overflow-hidden bg-school-stone">
                             <Image
                               src={section.image}
+                              imageKey={`story.${story.slug}.section.${index + 1}`}
                               alt={section.imageAlt}
                               fill
                               unoptimized

@@ -49,20 +49,11 @@ npm run lint
 npm run build
 ```
 
-The dashboard uses Cloudflare D1 for school stories and admissions enquiries.
-Generate database migrations after schema changes with:
-
-```bash
-npm run db:generate
-```
-
-Dashboard access uses ChatGPT sign-in and an explicit email allowlist in the
-hosted `DASHBOARD_ALLOWED_EMAILS` environment variable. No email domain is
-trusted automatically. Copy `.env.example` when local configuration is needed.
-
-For local dashboard testing, set `DASHBOARD_LOCAL_PREVIEW=true` in the ignored
-`.env.local` file. This opens the dashboard directly during `npm run dev` and
-is hard-disabled when `NODE_ENV` is `production`.
+Stories, admissions enquiries, independently managed image placements,
+leadership profiles and dashboard authentication use Supabase. Copy
+`.env.example` to the ignored `.env.local` file and add the
+project URL and publishable key. Create the administrator and database by
+following `supabase/README.md`, then open `/login`.
 
 Hosting and the public domain are intentionally deferred until the site owner
 approves launch. At that point, set `NEXT_PUBLIC_SITE_URL` to the selected
@@ -93,7 +84,7 @@ academic journey, school-life, story preview and gallery sections.
 - Leadership messages and SMT structure: `data/leadership.ts`
 - School story content: `data/stories.ts`
 - Dashboard and enquiry storage: `db/dashboard.ts`
-- Database schema and migrations: `db/schema.ts` and `drizzle/`
+- Supabase schema, policies and setup: `supabase/setup.sql`
 - Staff dashboard interface: `app/dashboard/` and `components/DashboardApp.tsx`
 - Homepage section layout: `app/page.tsx`
 - Shared components: `components/`

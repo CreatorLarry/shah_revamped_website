@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
 import { ArrowUpRight, BadgeCheck, Clock3 } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
@@ -7,6 +8,12 @@ import { Header } from "@/components/Header";
 import { InteriorHero } from "@/components/InteriorHero";
 import { SectionHeading } from "@/components/SectionHeading";
 import { seniorManagementTeam } from "@/data/leadership";
+import {
+  getPublicLeadershipProfiles,
+  type LeadershipProfile,
+} from "@/db/dashboard";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Senior Management Team | Shah Lalji Nangpar Academy",
@@ -15,7 +22,21 @@ export const metadata: Metadata = {
   alternates: { canonical: "/our-school/senior-management-team" },
 };
 
-export default function SeniorManagementTeamPage() {
+export default async function SeniorManagementTeamPage() {
+  let team: LeadershipProfile[] = seniorManagementTeam.map((member, index) => ({
+    ...member,
+    id: index + 1,
+    photoUrl: null as string | null,
+    photoAlt: "",
+    sortOrder: index + 1,
+    updatedAt: "",
+  }));
+  try {
+    team = await getPublicLeadershipProfiles();
+  } catch {
+    // The bundled profiles keep the page available before the migration runs.
+  }
+
   return (
     <>
       <Header />
@@ -30,6 +51,7 @@ export default function SeniorManagementTeamPage() {
           }
           description="Academic and operational leaders working together to keep learning, wellbeing, technology, facilities and finance moving in one clear direction."
           image="/images/school/school-event-leadership.webp"
+          imageKey="leadership.smt.hero"
           imageAlt="School leaders engaging with learners during an academy event"
           imagePosition="object-center"
         />
@@ -67,7 +89,7 @@ export default function SeniorManagementTeamPage() {
         <section className="bg-white py-20 sm:py-24 lg:py-32">
           <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10">
             <div className="grid border-l border-t border-school-navy/15 sm:grid-cols-2 xl:grid-cols-3">
-              {seniorManagementTeam.map((member, index) => {
+              {team.map((member, index) => {
                 const initials = member.confirmed
                   ? member.name
                       .replace(/^(Mr|Ms|Mrs|Dr)\.?\s+/i, "")
@@ -87,50 +109,59 @@ export default function SeniorManagementTeamPage() {
 
                 return (
                   <article
-                    key={member.role}
-                    className={`min-h-[390px] border-b border-r border-school-navy/15 p-7 sm:p-8 ${
+                    key={member.slug}
+                    className={`overflow-hidden border-b border-r border-school-navy/15 ${
                       member.confirmed ? "bg-white" : "bg-school-cream/60"
                     }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <span
-                        aria-hidden="true"
-                        className={`flex size-16 items-center justify-center font-serif text-2xl ${
-                          member.confirmed
-                            ? "bg-school-navy text-white"
-                            : "border border-dashed border-school-navy/30 text-school-navy"
-                        }`}
-                      >
-                        {initials}
-                      </span>
+                    <div className="relative aspect-[4/3] overflow-hidden bg-school-navy">
+                      {member.photoUrl ? (
+                        <Image
+                          src={member.photoUrl}
+                          alt={member.photoAlt || `${member.name}, ${member.role}`}
+                          fill
+                          unoptimized
+                          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="flex h-full items-center justify-center font-serif text-6xl text-white/85"
+                        >
+                          {initials}
+                        </span>
+                      )}
                       <span className="text-[0.62rem] font-bold tracking-[0.16em] text-school-navy/30">
-                        {String(index + 1).padStart(2, "0")}
+                        <span className="absolute right-4 top-4 bg-white px-3 py-2">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
                       </span>
                     </div>
-                    <p className="mt-8 text-[0.64rem] font-bold uppercase tracking-[0.16em] text-school-red">
-                      {member.area}
-                    </p>
-                    <h2 className="mt-3 font-serif text-3xl leading-tight text-school-ink">
-                      {member.name}
-                    </h2>
-                    <p className="mt-2 text-sm font-bold uppercase tracking-[0.11em] text-school-navy">
-                      {member.role}
-                    </p>
-                    <p className="mt-5 text-sm leading-7 text-school-muted">
-                      {member.description}
-                    </p>
-                    <p
-                      className={`mt-6 flex items-center gap-2 text-[0.62rem] font-bold uppercase tracking-[0.13em] ${
-                        member.confirmed
-                          ? "text-school-navy"
-                          : "text-school-muted"
-                      }`}
-                    >
-                      <StatusIcon aria-hidden="true" className="size-4" />
-                      {member.confirmed
-                        ? "Profile confirmed"
-                        : "Name and portrait pending"}
-                    </p>
+                    <div className="p-7 sm:p-8">
+                      <p className="text-[0.64rem] font-bold uppercase tracking-[0.16em] text-school-red">
+                        {member.area}
+                      </p>
+                      <h2 className="mt-3 font-serif text-3xl leading-tight text-school-ink">
+                        {member.name}
+                      </h2>
+                      <p className="mt-2 text-sm font-bold uppercase tracking-[0.11em] text-school-navy">
+                        {member.role}
+                      </p>
+                      <p className="mt-5 text-sm leading-7 text-school-muted">
+                        {member.description}
+                      </p>
+                      <p
+                        className={`mt-6 flex items-center gap-2 text-[0.62rem] font-bold uppercase tracking-[0.13em] ${
+                          member.confirmed ? "text-school-navy" : "text-school-muted"
+                        }`}
+                      >
+                        <StatusIcon aria-hidden="true" className="size-4" />
+                        {member.confirmed
+                          ? "Profile confirmed"
+                          : "Profile details pending"}
+                      </p>
+                    </div>
                   </article>
                 );
               })}

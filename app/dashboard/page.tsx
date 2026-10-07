@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
 import { ArrowLeft, LockKeyhole, ShieldX } from "lucide-react";
-import {
-  chatGPTSignInPath,
-  chatGPTSignOutPath,
-  getChatGPTUser,
-} from "@/app/chatgpt-auth";
 import { DashboardApp } from "@/components/DashboardApp";
 import { getDashboardSnapshot, type DashboardSnapshot } from "@/db/dashboard";
-import {
-  getLocalDashboardUser,
-  isDashboardAdmin,
-} from "@/lib/dashboard-auth";
+import { getDashboardIdentity } from "@/lib/dashboard-auth";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const dynamic = "force-dynamic";
 
@@ -28,26 +21,36 @@ const emptySnapshot: DashboardSnapshot = {
 };
 
 export default async function DashboardPage() {
-  const localPreviewUser = getLocalDashboardUser();
-  const user = localPreviewUser ?? (await getChatGPTUser());
+  if (!isSupabaseConfigured()) {
+    return (
+      <DashboardAccessPage
+        title="Setup required"
+        description="The dashboard is ready for Supabase, but the project URL and publishable key are not available in this environment yet."
+        actionHref="/"
+        actionLabel="Return to website"
+      />
+    );
+  }
+
+  const user = await getDashboardIdentity();
 
   if (!user) {
     return (
       <DashboardAccessPage
         title="School Desk"
-        description="Sign in with an explicitly approved administrator account to manage stories and admissions enquiries."
-        actionHref={chatGPTSignInPath("/dashboard")}
-        actionLabel="Sign in with ChatGPT"
+        description="Sign in with your approved school administrator account to manage stories and admissions enquiries."
+        actionHref="/login?next=/dashboard"
+        actionLabel="Sign in to dashboard"
       />
     );
   }
 
-  if (!localPreviewUser && !isDashboardAdmin(user.email)) {
+  if (!user.isAdmin) {
     return (
       <DashboardAccessPage
         title="Access not approved"
         description={`${user.email} is signed in, but it is not currently approved for the school dashboard.`}
-        actionHref={chatGPTSignOutPath("/dashboard")}
+        actionHref="/auth/signout?next=/login"
         actionLabel="Use another account"
         denied
       />
@@ -67,8 +70,7 @@ export default async function DashboardPage() {
     <DashboardApp
       displayName={user.displayName}
       email={user.email}
-      signOutHref={chatGPTSignOutPath("/")}
-      accessMode={localPreviewUser ? "local-preview" : "platform"}
+      signOutHref="/auth/signout"
       initialSnapshot={snapshot}
       initialError={databaseError}
     />
@@ -103,6 +105,7 @@ function DashboardAccessPage({
           </Link>
           <Image
             src="/images/school-logo.png"
+            imageKey="dashboard.access.logo"
             alt="Shah Lalji Nangpar Academy"
             width={92}
             height={92}
@@ -127,14 +130,15 @@ function DashboardAccessPage({
             {actionLabel}
           </a>
           <p className="mt-7 max-w-md text-xs leading-6 text-school-muted">
-            Access is granted only to email addresses explicitly listed by the
-            site owner. No email domain receives automatic access.
+            Access is granted only to accounts carrying the administrator role.
+            No email domain receives automatic access.
           </p>
         </div>
       </section>
       <section className="relative hidden overflow-hidden bg-school-navy lg:block">
         <Image
           src="/images/school/senior-students-community.webp"
+          imageKey="dashboard.access.background"
           alt=""
           fill
           unoptimized

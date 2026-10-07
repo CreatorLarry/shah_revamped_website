@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -49,6 +49,7 @@ export default function GalleryPage() {
           }
           description="A glimpse of learning, creativity, teamwork and everyday belonging across the SLNA community."
           image="/images/school/creative-arts-masks.webp"
+          imageKey="gallery.hero"
           imageAlt="Learners presenting colourful masks they created during an arts activity"
         />
 
@@ -73,6 +74,7 @@ export default function GalleryPage() {
                 >
                   <Image
                     src={photo.src}
+                    imageKey={`gallery.photo.${index + 1}`}
                     alt={photo.alt}
                     fill
                     unoptimized

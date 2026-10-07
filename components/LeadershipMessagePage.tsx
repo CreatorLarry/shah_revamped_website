@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
 import { ArrowLeft, Quote } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
@@ -28,6 +28,11 @@ export function LeadershipMessagePage({
           }
           description={message.description}
           image={message.image}
+          imageKey={
+            message.route.includes("board-chair")
+              ? "leadership.board-chair.hero"
+              : "leadership.administrator.hero"
+          }
           imageAlt={message.imageAlt}
           imagePosition={message.imagePosition}
         />
@@ -39,6 +44,11 @@ export function LeadershipMessagePage({
                 <div className="relative aspect-[4/3] overflow-hidden bg-school-stone">
                   <Image
                     src={message.image}
+                    imageKey={
+                      message.route.includes("board-chair")
+                        ? "leadership.board-chair.portrait"
+                        : "leadership.administrator.portrait"
+                    }
                     alt={message.imageAlt}
                     fill
                     unoptimized

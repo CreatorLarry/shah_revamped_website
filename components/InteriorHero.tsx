@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -7,6 +7,7 @@ type InteriorHeroProps = {
   title: ReactNode;
   description: string;
   image: string;
+  imageKey: string;
   imageAlt: string;
   imagePosition?: string;
 };
@@ -16,6 +17,7 @@ export function InteriorHero({
   title,
   description,
   image,
+  imageKey,
   imageAlt,
   imagePosition = "object-center",
 }: InteriorHeroProps) {
@@ -47,6 +49,7 @@ export function InteriorHero({
         <div className="relative min-h-[390px] lg:col-span-6 lg:min-h-full">
           <Image
             src={image}
+            imageKey={imageKey}
             alt={imageAlt}
             fill
             unoptimized

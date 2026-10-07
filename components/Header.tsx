@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
 import { ChevronDown, Mail, MapPin, Menu, Phone, X } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -68,6 +68,7 @@ export function Header() {
           >
             <Image
               src="/images/school-logo.png"
+              imageKey="global.header.logo"
               alt=""
               width={70}
               height={70}

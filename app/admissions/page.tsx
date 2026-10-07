@@ -69,6 +69,7 @@ export default function AdmissionsPage() {
           }
           description="SLNA welcomes learners from all backgrounds. Our admissions team will help you understand the right entry point and guide you through every step."
           image="/images/school/campus-assembly.webp"
+          imageKey="admissions.hero"
           imageAlt="SLNA learners gathered for an assembly in the school courtyard"
         />
 

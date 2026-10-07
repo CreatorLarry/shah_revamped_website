@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import {
   Compass,
   GraduationCap,
@@ -63,6 +63,7 @@ export default function OurSchoolPage() {
           }
           description="A co-educational Cambridge Curriculum day school where learners aged 2–18 are known, supported and encouraged to strive for excellence."
           image="/images/school/senior-students-community.webp"
+          imageKey="our-school.hero"
           imageAlt="Senior students gathered together in their red school blazers"
         />
 
@@ -174,6 +175,7 @@ export default function OurSchoolPage() {
             <div className="relative aspect-[7/6] overflow-hidden bg-school-stone lg:col-span-6">
               <Image
                 src="/images/school/school-event-leadership.webp"
+                imageKey="our-school.responsibility"
                 alt="School leaders speaking with learners during an academy event"
                 fill
                 unoptimized

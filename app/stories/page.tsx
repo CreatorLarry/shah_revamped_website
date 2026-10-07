@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
 import { ArrowUpRight, Clock3 } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
@@ -35,6 +35,7 @@ export default async function StoriesPage() {
           }
           description="Explore the moments, programmes and people that bring learning to life across the SLNA community."
           image="/images/school/senior-students-community.webp"
+          imageKey="stories.hero"
           imageAlt="SLNA senior students sharing a lively moment together"
         />
 
@@ -73,6 +74,7 @@ export default async function StoriesPage() {
                     >
                       <Image
                         src={story.image}
+                        imageKey={`stories.index.${story.slug}`}
                         alt={story.alt}
                         fill
                         unoptimized

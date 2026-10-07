@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import {
   ArrowDown,
   ChevronLeft,
@@ -117,6 +117,7 @@ export function HeroSection() {
             >
               <Image
                 src={slide.src}
+                imageKey={`home.hero.${index + 1}`}
                 alt=""
                 fill
                 unoptimized

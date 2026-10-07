@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import {
   ArrowUpRight,
   Check,
@@ -76,6 +76,7 @@ export default async function Home() {
               <div className="relative ml-auto aspect-[5/6] max-w-[610px] overflow-hidden bg-school-navy">
                 <Image
                   src="/images/school/student-portrait.webp"
+                  imageKey="home.welcome"
                   alt="A smiling SLNA learner in school uniform"
                   fill
                   unoptimized
@@ -165,6 +166,7 @@ export default async function Home() {
               <div className="relative aspect-[3/4] overflow-hidden bg-school-ink">
                 <Image
                   src="/images/school/school-event-leadership.webp"
+                  imageKey="home.leadership"
                   alt="School leadership speaking with learners during an academy event"
                   fill
                   unoptimized
@@ -243,6 +245,7 @@ export default async function Home() {
                 <div className="relative mt-10 aspect-[7/5] overflow-hidden bg-school-navy">
                   <Image
                     src="/images/school/cycling-club.webp"
+                    imageKey="home.school-life"
                     alt="SLNA learners preparing their bicycles during an outdoor club activity"
                     fill
                     unoptimized
@@ -362,6 +365,7 @@ export default async function Home() {
                     <div className="relative aspect-[8/5] overflow-hidden bg-school-navy">
                       <Image
                         src={story.image}
+                        imageKey={`home.story.${story.slug}`}
                         alt={story.alt}
                         fill
                         unoptimized
@@ -489,6 +493,7 @@ export default async function Home() {
                   >
                     <Image
                       src={image.src}
+                      imageKey={`home.gallery.${index + 1}`}
                       alt={image.alt}
                       fill
                       unoptimized

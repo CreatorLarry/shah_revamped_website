@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import {
   HeartHandshake,
   Lightbulb,
@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 const activities = [
   {
     title: "Sport",
+    imageKey: "school-life.activity.sport",
     description:
       "Team and individual sport build fitness, resilience, leadership and school spirit.",
     image: "/images/school/swimming-competition.webp",
@@ -43,6 +44,7 @@ const activities = [
   },
   {
     title: "The arts",
+    imageKey: "school-life.activity.arts",
     description:
       "Creative opportunities help learners express ideas, perform with confidence and collaborate.",
     image: "/images/school/creative-arts-masks.webp",
@@ -59,6 +61,7 @@ const activities = [
   },
   {
     title: "Leadership",
+    imageKey: "school-life.activity.leadership",
     description:
       "Learners practise responsibility, initiative and service through meaningful roles.",
     image: "/images/school/school-event-leadership.webp",
@@ -74,6 +77,7 @@ const activities = [
   },
   {
     title: "Clubs and societies",
+    imageKey: "school-life.activity.clubs",
     description:
       "Interest-led groups deepen knowledge, communication and practical problem-solving.",
     image: "/images/school/chess-club.webp",
@@ -108,6 +112,7 @@ export default function SchoolLifePage() {
           }
           description="A rich school experience supports learners academically, socially and emotionally while giving them opportunities to explore interests and build lasting skills."
           image="/images/school/sports-day-community.webp"
+          imageKey="school-life.hero"
           imageAlt="Junior learners enjoying an energetic outdoor school activity"
         />
 
@@ -116,6 +121,7 @@ export default function SchoolLifePage() {
             <div className="relative aspect-[7/6] overflow-hidden bg-school-stone lg:col-span-6">
               <Image
                 src="/images/school/student-portrait.webp"
+                imageKey="school-life.pastoral"
                 alt="A smiling SLNA learner in school uniform"
                 fill
                 unoptimized
@@ -183,7 +189,7 @@ export default function SchoolLifePage() {
 
             <div className="mt-14 grid gap-8 lg:grid-cols-2">
               {activities.map(
-                ({ title, description, image, alt, items, Icon }) => (
+                ({ title, description, image, imageKey, alt, items, Icon }) => (
                   <article
                     key={title}
                     className="overflow-hidden border border-school-navy/15 bg-school-cream"
@@ -191,6 +197,7 @@ export default function SchoolLifePage() {
                     <div className="relative aspect-[8/5] overflow-hidden bg-school-navy">
                       <Image
                         src={image}
+                        imageKey={imageKey}
                         alt={alt}
                         fill
                         unoptimized

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import { Languages, Palette, Sparkles, Trophy } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
 import { ButtonLink } from "@/components/ButtonLink";
@@ -74,6 +74,7 @@ export default function EducationPage() {
           }
           description="A coherent Cambridge Curriculum journey from age 2 to 18, building strong foundations, subject depth and growing independence at every stage."
           image="/images/school/outdoor-study.webp"
+          imageKey="education.hero"
           imageAlt="A learner focused on her work during an outdoor study session"
           imagePosition="object-center"
         />
@@ -127,6 +128,7 @@ export default function EducationPage() {
                   >
                     <Image
                       src={stage.image}
+                      imageKey={`education.stage.${stage.index}`}
                       alt={stage.alt}
                       fill
                       unoptimized

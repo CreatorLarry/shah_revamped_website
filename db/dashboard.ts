@@ -1,8 +1,7 @@
-import { stories as seedStories, type Story } from "@/data/stories";
-
-type Bindings = {
-  DB?: D1Database;
-};
+import type { Story } from "@/data/stories";
+import { siteImageSlots, type SiteImageSlot } from "@/data/site-images";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type DashboardStory = Story & {
   id: number;
@@ -30,6 +29,30 @@ export type DashboardSnapshot = {
   enquiries: Enquiry[];
 };
 
+export type SiteImage = {
+  key: string;
+  label: string;
+  group: string;
+  defaultUrl: string;
+  currentUrl: string | null;
+  altText: string;
+  updatedAt: string;
+};
+
+export type LeadershipProfile = {
+  id: number;
+  slug: string;
+  name: string;
+  role: string;
+  area: string;
+  description: string;
+  photoUrl: string | null;
+  photoAlt: string;
+  confirmed: boolean;
+  sortOrder: number;
+  updatedAt: string;
+};
+
 type StoryRow = {
   id: number;
   slug: string;
@@ -40,9 +63,9 @@ type StoryRow = {
   hero_alt: string;
   read_time: string;
   quote: string;
-  body_json: string;
+  body_json: unknown;
   status: "draft" | "published";
-  created_by: string;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -60,140 +83,78 @@ type EnquiryRow = {
   updated_at: string;
 };
 
-let schemaPromise: Promise<void> | null = null;
+type SiteImageRow = {
+  key: string;
+  label: string;
+  group_name: string;
+  default_url: string;
+  current_url: string | null;
+  alt_text: string;
+  updated_at: string;
+};
 
-async function getDatabase(): Promise<D1Database> {
-  const { env } = await import("cloudflare:workers");
-  const database = (env as unknown as Bindings).DB;
-  if (!database) {
-    throw new Error("The dashboard database binding is unavailable.");
-  }
-  return database;
-}
-
-export async function ensureDashboardSchema() {
-  if (!schemaPromise) {
-    schemaPromise = initialiseSchema().catch((error) => {
-      schemaPromise = null;
-      throw error;
-    });
-  }
-  return schemaPromise;
-}
-
-async function initialiseSchema() {
-  const database = await getDatabase();
-  await database.batch([
-    database.prepare(`
-      CREATE TABLE IF NOT EXISTS stories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        slug TEXT NOT NULL,
-        category TEXT NOT NULL,
-        title TEXT NOT NULL,
-        excerpt TEXT NOT NULL,
-        hero_image TEXT NOT NULL,
-        hero_alt TEXT NOT NULL,
-        read_time TEXT NOT NULL,
-        quote TEXT NOT NULL,
-        body_json TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'draft',
-        created_by TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )
-    `),
-    database.prepare(
-      "CREATE UNIQUE INDEX IF NOT EXISTS stories_slug_idx ON stories (slug)",
-    ),
-    database.prepare(
-      "CREATE INDEX IF NOT EXISTS stories_status_idx ON stories (status)",
-    ),
-    database.prepare(`
-      CREATE TABLE IF NOT EXISTS enquiries (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        parent_name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        child_age TEXT NOT NULL,
-        year_group TEXT NOT NULL,
-        message TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'new',
-        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )
-    `),
-    database.prepare(
-      "CREATE INDEX IF NOT EXISTS enquiries_status_idx ON enquiries (status)",
-    ),
-    database.prepare(
-      "CREATE INDEX IF NOT EXISTS enquiries_created_at_idx ON enquiries (created_at)",
-    ),
-  ]);
-
-  await database.batch(
-    seedStories.map((story) =>
-      database
-        .prepare(`
-          INSERT OR IGNORE INTO stories (
-            slug, category, title, excerpt, hero_image, hero_alt,
-            read_time, quote, body_json, status, created_by
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', ?)
-        `)
-        .bind(
-          story.slug,
-          story.category,
-          story.title,
-          story.excerpt,
-          story.image,
-          story.alt,
-          story.readTime,
-          story.quote,
-          JSON.stringify(story.sections),
-          "website-seed",
-        ),
-    ),
-  );
-}
+type LeadershipProfileRow = {
+  id: number;
+  slug: string;
+  name: string;
+  role: string;
+  area: string;
+  description: string;
+  photo_url: string | null;
+  photo_alt: string;
+  confirmed: boolean;
+  sort_order: number;
+  updated_at: string;
+};
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
-  await ensureDashboardSchema();
-  const database = await getDatabase();
-  const [storyRows, enquiryRows] = await Promise.all([
-    database
-      .prepare("SELECT * FROM stories ORDER BY updated_at DESC, id DESC")
-      .all<StoryRow>(),
-    database
-      .prepare("SELECT * FROM enquiries ORDER BY created_at DESC, id DESC")
-      .all<EnquiryRow>(),
+  const supabase = await createSupabaseServerClient();
+  const [storyResult, enquiryResult] = await Promise.all([
+    supabase
+      .from("stories")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .order("id", { ascending: false }),
+    supabase
+      .from("enquiries")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false }),
   ]);
 
+  if (storyResult.error) throw storyResult.error;
+  if (enquiryResult.error) throw enquiryResult.error;
+
   return {
-    stories: storyRows.results.map(mapStory),
-    enquiries: enquiryRows.results.map(mapEnquiry),
+    stories: (storyResult.data as StoryRow[]).map(mapStory),
+    enquiries: (enquiryResult.data as EnquiryRow[]).map(mapEnquiry),
   };
 }
 
 export async function getPublishedStories(): Promise<Story[]> {
-  await ensureDashboardSchema();
-  const database = await getDatabase();
-  const rows = await database
-    .prepare(
-      "SELECT * FROM stories WHERE status = 'published' ORDER BY updated_at DESC, id DESC",
-    )
-    .all<StoryRow>();
-  return rows.results.map(mapStory);
+  const supabase = createSupabasePublicClient();
+  const { data, error } = await supabase
+    .from("stories")
+    .select("*")
+    .eq("status", "published")
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: false });
+
+  if (error) throw error;
+  return (data as StoryRow[]).map(mapStory);
 }
 
 export async function getPublishedStory(slug: string): Promise<Story | null> {
-  await ensureDashboardSchema();
-  const database = await getDatabase();
-  const row = await database
-    .prepare(
-      "SELECT * FROM stories WHERE slug = ? AND status = 'published' LIMIT 1",
-    )
-    .bind(slug)
-    .first<StoryRow>();
-  return row ? mapStory(row) : null;
+  const supabase = createSupabasePublicClient();
+  const { data, error } = await supabase
+    .from("stories")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapStory(data as StoryRow) : null;
 }
 
 export async function createStory(
@@ -210,7 +171,6 @@ export async function createStory(
   },
   createdBy: string,
 ) {
-  await ensureDashboardSchema();
   const sections = [
     {
       heading: "The story",
@@ -219,43 +179,39 @@ export async function createStory(
       imageAlt: input.alt,
     },
   ];
-  const database = await getDatabase();
-  const result = await database
-    .prepare(`
-      INSERT INTO stories (
-        slug, category, title, excerpt, hero_image, hero_alt,
-        read_time, quote, body_json, status, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `)
-    .bind(
-      input.slug,
-      input.category,
-      input.title,
-      input.excerpt,
-      input.image,
-      input.alt,
-      input.readTime,
-      input.quote,
-      JSON.stringify(sections),
-      input.status,
-      createdBy,
-    )
-    .run();
-  return result.meta.last_row_id;
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("stories")
+    .insert({
+      slug: input.slug,
+      category: input.category,
+      title: input.title,
+      excerpt: input.excerpt,
+      hero_image: input.image,
+      hero_alt: input.alt,
+      read_time: input.readTime,
+      quote: input.quote,
+      body_json: sections,
+      status: input.status,
+      created_by: createdBy,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return Number(data.id);
 }
 
 export async function updateStoryStatus(
   id: number,
   status: "draft" | "published",
 ) {
-  await ensureDashboardSchema();
-  const database = await getDatabase();
-  await database
-    .prepare(
-      "UPDATE stories SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-    )
-    .bind(status, id)
-    .run();
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("stories")
+    .update({ status })
+    .eq("id", id);
+  if (error) throw error;
 }
 
 export async function createEnquiry(input: {
@@ -266,38 +222,175 @@ export async function createEnquiry(input: {
   yearGroup: string;
   message: string;
 }) {
-  await ensureDashboardSchema();
-  const database = await getDatabase();
-  const result = await database
-    .prepare(`
-      INSERT INTO enquiries (
-        parent_name, email, phone, child_age, year_group, message
-      ) VALUES (?, ?, ?, ?, ?, ?)
-    `)
-    .bind(
-      input.parentName,
-      input.email,
-      input.phone,
-      input.childAge,
-      input.yearGroup,
-      input.message,
-    )
-    .run();
-  return result.meta.last_row_id;
+  const supabase = createSupabasePublicClient();
+  const { error } = await supabase.from("enquiries").insert({
+      parent_name: input.parentName,
+      email: input.email,
+      phone: input.phone,
+      child_age: input.childAge,
+      year_group: input.yearGroup,
+      message: input.message,
+    });
+
+  if (error) throw error;
+  // Do not return the inserted row to public visitors; enquiries are private.
+  return null;
 }
 
 export async function updateEnquiryStatus(
   id: number,
   status: "new" | "in_progress" | "closed",
 ) {
-  await ensureDashboardSchema();
-  const database = await getDatabase();
-  await database
-    .prepare(
-      "UPDATE enquiries SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-    )
-    .bind(status, id)
-    .run();
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("enquiries")
+    .update({ status })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function getSiteImages(): Promise<SiteImage[]> {
+  const supabase = await createSupabaseServerClient();
+  const [imageResult, storyResult] = await Promise.all([
+    supabase.from("site_images").select("*"),
+    supabase.from("stories").select("*").order("id"),
+  ]);
+
+  if (imageResult.error) throw imageResult.error;
+  if (storyResult.error) throw storyResult.error;
+
+  const rows = new Map(
+    (imageResult.data as SiteImageRow[]).map((row) => [row.key, row]),
+  );
+  const slots = [
+    ...siteImageSlots,
+    ...buildStoryImageSlots(storyResult.data as StoryRow[]),
+  ];
+
+  return slots
+    .map((slot) => {
+      const row = rows.get(slot.key);
+      return {
+        key: slot.key,
+        label: slot.label,
+        group: slot.group,
+        defaultUrl: slot.defaultUrl,
+        currentUrl: row?.current_url ?? null,
+        altText: row?.alt_text ?? "",
+        updatedAt: row?.updated_at ?? "",
+      };
+    })
+    .sort((a, b) =>
+      `${a.group}-${a.label}`.localeCompare(`${b.group}-${b.label}`),
+    );
+}
+
+export async function getPublicSiteImageOverrides() {
+  const supabase = createSupabasePublicClient();
+  const { data, error } = await supabase
+    .from("site_images")
+    .select("key, current_url, alt_text")
+    .not("current_url", "is", null);
+
+  if (error) throw error;
+
+  return Object.fromEntries(
+    (data as Pick<SiteImageRow, "key" | "current_url" | "alt_text">[])
+      .filter((image) => image.current_url)
+      .map((image) => [
+        image.key,
+        { url: image.current_url as string, alt: image.alt_text },
+      ]),
+  );
+}
+
+export async function updateSiteImage(input: {
+  slot: SiteImageSlot;
+  currentUrl: string;
+  altText: string;
+  updatedBy: string;
+}) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("site_images")
+    .upsert({
+      key: input.slot.key,
+      label: input.slot.label,
+      group_name: input.slot.group,
+      default_url: input.slot.defaultUrl,
+      current_url: input.currentUrl,
+      alt_text: input.altText,
+      updated_by: input.updatedBy,
+    }, { onConflict: "key" })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return mapSiteImage(data as SiteImageRow);
+}
+
+export async function resetSiteImage(slot: SiteImageSlot) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("site_images")
+    .update({ current_url: null, alt_text: "", updated_by: null })
+    .eq("key", slot.key)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return mapSiteImage(data as SiteImageRow);
+}
+
+export async function getDashboardLeadershipProfiles() {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("leadership_profiles")
+    .select("*")
+    .order("sort_order")
+    .order("id");
+  if (error) throw error;
+  return (data as LeadershipProfileRow[]).map(mapLeadershipProfile);
+}
+
+export async function getPublicLeadershipProfiles() {
+  const supabase = createSupabasePublicClient();
+  const { data, error } = await supabase
+    .from("leadership_profiles")
+    .select("*")
+    .order("sort_order")
+    .order("id");
+  if (error) throw error;
+  return (data as LeadershipProfileRow[]).map(mapLeadershipProfile);
+}
+
+export async function updateLeadershipProfile(input: {
+  slug: string;
+  name: string;
+  role: string;
+  area: string;
+  description: string;
+  photoUrl: string | null;
+  photoAlt: string;
+  confirmed: boolean;
+}) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("leadership_profiles")
+    .update({
+      name: input.name,
+      role: input.role,
+      area: input.area,
+      description: input.description,
+      photo_url: input.photoUrl,
+      photo_alt: input.photoAlt,
+      confirmed: input.confirmed,
+    })
+    .eq("slug", input.slug)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return mapLeadershipProfile(data as LeadershipProfileRow);
 }
 
 function mapStory(row: StoryRow): DashboardStory {
@@ -312,9 +405,9 @@ function mapStory(row: StoryRow): DashboardStory {
     alt: row.hero_alt,
     readTime: row.read_time,
     quote: row.quote,
-    sections: JSON.parse(row.body_json) as Story["sections"],
+    sections: parseSections(row.body_json),
     status: row.status,
-    createdBy: row.created_by,
+    createdBy: row.created_by ?? "website-seed",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -333,4 +426,77 @@ function mapEnquiry(row: EnquiryRow): Enquiry {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function mapSiteImage(row: SiteImageRow): SiteImage {
+  return {
+    key: row.key,
+    label: row.label,
+    group: row.group_name,
+    defaultUrl: row.default_url,
+    currentUrl: row.current_url,
+    altText: row.alt_text,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapLeadershipProfile(row: LeadershipProfileRow): LeadershipProfile {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    role: row.role,
+    area: row.area,
+    description: row.description,
+    photoUrl: row.photo_url,
+    photoAlt: row.photo_alt,
+    confirmed: row.confirmed,
+    sortOrder: row.sort_order,
+    updatedAt: row.updated_at,
+  };
+}
+
+function buildStoryImageSlots(rows: StoryRow[]): SiteImageSlot[] {
+  return rows.flatMap((row) => {
+    const sections = parseSections(row.body_json);
+    const placements: SiteImageSlot[] = [
+      {
+        key: `home.story.${row.slug}`,
+        label: `Homepage story card — ${row.title}`,
+        group: "Stories",
+        defaultUrl: row.hero_image,
+      },
+      {
+        key: `stories.index.${row.slug}`,
+        label: `Stories listing — ${row.title}`,
+        group: "Stories",
+        defaultUrl: row.hero_image,
+      },
+      {
+        key: `story.${row.slug}.hero`,
+        label: `Story hero — ${row.title}`,
+        group: "Stories",
+        defaultUrl: row.hero_image,
+      },
+    ];
+
+    sections.forEach((section, index) => {
+      if (!section.image) return;
+      placements.push({
+        key: `story.${row.slug}.section.${index + 1}`,
+        label: `${row.title} — section ${index + 1}`,
+        group: "Stories",
+        defaultUrl: section.image,
+      });
+    });
+    return placements;
+  });
+}
+
+function parseSections(value: unknown): Story["sections"] {
+  if (Array.isArray(value)) return value as unknown as Story["sections"];
+  if (typeof value === "string") {
+    return JSON.parse(value) as Story["sections"];
+  }
+  return [];
 }

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -72,6 +72,7 @@ export function Footer() {
           <div className="flex items-center gap-4">
             <Image
               src="/images/school-logo.png"
+              imageKey="global.footer.logo"
               alt=""
               width={90}
               height={90}

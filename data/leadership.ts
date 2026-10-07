@@ -99,6 +99,7 @@ export const leadershipMessages = {
 
 export const seniorManagementTeam = [
   {
+    slug: "school-administrator",
     name: "Ms Alice Okidia",
     role: "School Administrator",
     area: "Executive leadership",
@@ -107,6 +108,7 @@ export const seniorManagementTeam = [
     confirmed: true,
   },
   {
+    slug: "senior-school-head",
     name: "Ms Molly Okumu",
     role: "Senior School Head",
     area: "Senior School",
@@ -115,6 +117,7 @@ export const seniorManagementTeam = [
     confirmed: true,
   },
   {
+    slug: "junior-school-head",
     name: "Mr George Gasper",
     role: "Junior School Head",
     area: "Junior School",
@@ -123,6 +126,7 @@ export const seniorManagementTeam = [
     confirmed: true,
   },
   {
+    slug: "head-of-early-years",
     name: "Ms Pheoby Marimu",
     role: "Head of Early Years",
     area: "Early Years",
@@ -131,6 +135,7 @@ export const seniorManagementTeam = [
     confirmed: true,
   },
   {
+    slug: "head-of-information-technology",
     name: "Profile to be confirmed",
     role: "Head of Information Technology",
     area: "Digital systems",
@@ -139,6 +144,7 @@ export const seniorManagementTeam = [
     confirmed: false,
   },
   {
+    slug: "facilities-manager",
     name: "Profile to be confirmed",
     role: "Facilities Manager",
     area: "Campus operations",
@@ -147,6 +153,7 @@ export const seniorManagementTeam = [
     confirmed: false,
   },
   {
+    slug: "school-accountant",
     name: "Profile to be confirmed",
     role: "School Accountant",
     area: "Finance",

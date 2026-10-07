@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -10,30 +9,42 @@ import {
   Clock3,
   FilePlus2,
   Inbox,
+  Images,
   LayoutDashboard,
   LogOut,
   Menu,
   Search,
   Send,
   Settings,
+  RotateCcw,
+  Upload,
   UsersRound,
   X,
 } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
+import {
+  ManagedImage as Image,
+  refreshManagedImageRegistry,
+} from "@/components/ManagedImage";
 import type {
   DashboardSnapshot,
   DashboardStory,
   Enquiry,
+  LeadershipProfile,
+  SiteImage,
 } from "@/db/dashboard";
-import type { DashboardAccessMode } from "@/lib/dashboard-auth";
 
-type DashboardSection = "overview" | "stories" | "enquiries";
+type DashboardSection =
+  | "overview"
+  | "stories"
+  | "media"
+  | "leadership"
+  | "enquiries";
 
 type DashboardAppProps = {
   displayName: string;
   email: string;
   signOutHref: string;
-  accessMode: DashboardAccessMode;
   initialSnapshot: DashboardSnapshot;
   initialError?: string;
 };
@@ -41,6 +52,8 @@ type DashboardAppProps = {
 const navigation = [
   { id: "overview", label: "Overview", Icon: LayoutDashboard },
   { id: "stories", label: "Stories", Icon: BookOpenText },
+  { id: "media", label: "Media", Icon: Images },
+  { id: "leadership", label: "Leadership", Icon: UsersRound },
   { id: "enquiries", label: "Enquiries", Icon: Inbox },
 ] as const;
 
@@ -54,7 +67,6 @@ export function DashboardApp({
   displayName,
   email,
   signOutHref,
-  accessMode,
   initialSnapshot,
   initialError,
 }: DashboardAppProps) {
@@ -62,7 +74,69 @@ export function DashboardApp({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [stories, setStories] = useState(initialSnapshot.stories);
   const [enquiries, setEnquiries] = useState(initialSnapshot.enquiries);
+  const [media, setMedia] = useState<SiteImage[]>([]);
+  const [mediaLoaded, setMediaLoaded] = useState(false);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [leadership, setLeadership] = useState<LeadershipProfile[]>([]);
+  const [leadershipLoaded, setLeadershipLoaded] = useState(false);
+  const [leadershipLoading, setLeadershipLoading] = useState(false);
   const [notice, setNotice] = useState(initialError ?? "");
+
+  async function openSection(nextSection: DashboardSection) {
+    setSection(nextSection);
+    setMobileMenuOpen(false);
+    if (nextSection === "media" && !mediaLoaded && !mediaLoading) {
+      setMediaLoading(true);
+      try {
+        const response = await fetch("/api/dashboard/media");
+        const result = (await response.json()) as {
+          images?: SiteImage[];
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(result.error || "The Media Library could not be loaded.");
+        }
+        setMedia(result.images ?? []);
+        setMediaLoaded(true);
+      } catch (error) {
+        setNotice(
+          error instanceof Error
+            ? error.message
+            : "The Media Library could not be loaded.",
+        );
+      } finally {
+        setMediaLoading(false);
+      }
+    }
+
+    if (
+      nextSection === "leadership" &&
+      !leadershipLoaded &&
+      !leadershipLoading
+    ) {
+      setLeadershipLoading(true);
+      try {
+        const response = await fetch("/api/dashboard/leadership");
+        const result = (await response.json()) as {
+          profiles?: LeadershipProfile[];
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(result.error || "Leadership profiles could not be loaded.");
+        }
+        setLeadership(result.profiles ?? []);
+        setLeadershipLoaded(true);
+      } catch (error) {
+        setNotice(
+          error instanceof Error
+            ? error.message
+            : "Leadership profiles could not be loaded.",
+        );
+      } finally {
+        setLeadershipLoading(false);
+      }
+    }
+  }
 
   const newEnquiries = enquiries.filter(
     (enquiry) => enquiry.status === "new",
@@ -87,6 +161,7 @@ export function DashboardApp({
           >
             <Image
               src="/images/school-logo.png"
+              imageKey="dashboard.sidebar.logo"
               alt=""
               width={58}
               height={58}
@@ -111,7 +186,7 @@ export function DashboardApp({
               <button
                 key={id}
                 type="button"
-                onClick={() => setSection(id)}
+                onClick={() => void openSection(id)}
                 className={`flex min-h-12 w-full items-center gap-3 px-4 text-left text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-school-gold ${
                   section === id
                     ? "bg-white text-school-navy"
@@ -145,7 +220,7 @@ export function DashboardApp({
             className="mt-2 flex min-h-11 items-center gap-3 px-3 text-xs font-bold uppercase tracking-[0.12em] text-white/58 transition-colors hover:text-school-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-school-gold"
           >
             <LogOut aria-hidden="true" className="size-4" />
-            {accessMode === "local-preview" ? "Exit preview" : "Sign out"}
+            Sign out
           </a>
         </div>
       </aside>
@@ -178,11 +253,6 @@ export function DashboardApp({
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {accessMode === "local-preview" ? (
-                <span className="hidden border border-school-gold/50 bg-school-gold/10 px-3 py-2 text-[0.6rem] font-bold uppercase tracking-[0.13em] text-school-navy sm:inline-flex">
-                  Local preview
-                </span>
-              ) : null}
               <Link
                 href="/"
                 target="_blank"
@@ -203,15 +273,12 @@ export function DashboardApp({
               aria-label="Dashboard mobile navigation"
               className="border-t border-school-navy/10 bg-white px-4 py-3 lg:hidden"
             >
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                 {navigation.map(({ id, label, Icon }) => (
                   <button
                     key={id}
                     type="button"
-                    onClick={() => {
-                      setSection(id);
-                      setMobileMenuOpen(false);
-                    }}
+                    onClick={() => void openSection(id)}
                     className={`flex min-h-16 flex-col items-center justify-center gap-2 px-2 text-[0.64rem] font-bold uppercase tracking-[0.08em] ${
                       section === id
                         ? "bg-school-navy text-white"
@@ -259,7 +326,7 @@ export function DashboardApp({
               publishedStories={publishedStories}
               newEnquiries={newEnquiries}
               followUps={followUps}
-              onNavigate={setSection}
+              onNavigate={(nextSection) => void openSection(nextSection)}
             />
           ) : null}
 
@@ -275,6 +342,24 @@ export function DashboardApp({
             <EnquiriesPanel
               enquiries={enquiries}
               onEnquiriesChange={setEnquiries}
+              onNotice={setNotice}
+            />
+          ) : null}
+
+          {section === "media" ? (
+            <MediaPanel
+              images={media}
+              loading={mediaLoading}
+              onImagesChange={setMedia}
+              onNotice={setNotice}
+            />
+          ) : null}
+
+          {section === "leadership" ? (
+            <LeadershipPanel
+              profiles={leadership}
+              loading={leadershipLoading}
+              onProfilesChange={setLeadership}
               onNotice={setNotice}
             />
           ) : null}
@@ -786,6 +871,425 @@ function StoryCreateForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function MediaPanel({
+  images,
+  loading,
+  onImagesChange,
+  onNotice,
+}: {
+  images: SiteImage[];
+  loading: boolean;
+  onImagesChange: (images: SiteImage[]) => void;
+  onNotice: (message: string) => void;
+}) {
+  const [group, setGroup] = useState("All");
+  const [savingKey, setSavingKey] = useState("");
+  const groups = ["All", ...new Set(images.map((image) => image.group))];
+  const visibleImages =
+    group === "All"
+      ? images
+      : images.filter((image) => image.group === group);
+
+  async function uploadReplacement(
+    event: FormEvent<HTMLFormElement>,
+    image: SiteImage,
+  ) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    formData.set("key", image.key);
+    setSavingKey(image.key);
+
+    try {
+      const response = await fetch("/api/dashboard/media", {
+        method: "POST",
+        body: formData,
+      });
+      const result = (await response.json()) as {
+        image?: SiteImage;
+        error?: string;
+      };
+      if (!response.ok || !result.image) {
+        throw new Error(result.error || "The replacement could not be saved.");
+      }
+
+      onImagesChange(
+        images.map((item) =>
+          item.key === result.image?.key ? result.image : item,
+        ),
+      );
+      refreshManagedImageRegistry();
+      onNotice(`${image.label} has been updated across the website.`);
+    } catch (error) {
+      onNotice(
+        error instanceof Error
+          ? error.message
+          : "The replacement could not be saved.",
+      );
+    } finally {
+      setSavingKey("");
+    }
+  }
+
+  async function restoreOriginal(image: SiteImage) {
+    setSavingKey(image.key);
+    try {
+      const response = await fetch("/api/dashboard/media", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ key: image.key }),
+      });
+      const result = (await response.json()) as {
+        image?: SiteImage;
+        error?: string;
+      };
+      if (!response.ok || !result.image) {
+        throw new Error(result.error || "The original could not be restored.");
+      }
+
+      onImagesChange(
+        images.map((item) =>
+          item.key === result.image?.key ? result.image : item,
+        ),
+      );
+      refreshManagedImageRegistry();
+      onNotice(`${image.label} is using the original website image again.`);
+    } catch (error) {
+      onNotice(
+        error instanceof Error
+          ? error.message
+          : "The original could not be restored.",
+      );
+    } finally {
+      setSavingKey("");
+    }
+  }
+
+  return (
+    <div>
+      <div>
+        <p className="text-[0.66rem] font-bold uppercase tracking-[0.17em] text-school-red">
+          Website photography
+        </p>
+        <h2 className="mt-3 font-serif text-4xl tracking-[-0.035em] sm:text-5xl">
+          Media Library
+        </h2>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-school-muted">
+          Every card represents one exact website placement. Replacing it will
+          not change another section, even when both originally used the same
+          photograph. JPG, PNG, WebP and AVIF files up to 10 MB are accepted.
+        </p>
+      </div>
+
+      {images.length > 0 ? (
+        <div className="mt-8 flex flex-wrap gap-2">
+          {groups.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setGroup(option)}
+              className={`min-h-10 px-4 text-[0.64rem] font-bold uppercase tracking-[0.1em] ${
+                group === option
+                  ? "bg-school-navy text-white"
+                  : "border border-school-navy/15 bg-white text-school-navy"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {loading ? (
+        <div className="mt-8 border border-school-navy/10 bg-white p-10 text-center text-sm text-school-muted">
+          Loading the Media Library…
+        </div>
+      ) : visibleImages.length > 0 ? (
+        <div className="mt-7 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {visibleImages.map((image) => {
+            const saving = savingKey === image.key;
+            return (
+              <article
+                key={image.key}
+                className="overflow-hidden border border-school-navy/10 bg-white shadow-sm"
+              >
+                <div className="relative aspect-[4/3] bg-school-stone">
+                  <Image
+                    src={image.currentUrl || image.defaultUrl}
+                    alt=""
+                    fill
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                    className="object-cover"
+                  />
+                  <span className="absolute left-3 top-3 bg-school-navy/88 px-3 py-2 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-white backdrop-blur-sm">
+                    {image.currentUrl ? "Replacement active" : "Original image"}
+                  </span>
+                </div>
+
+                <div className="p-5">
+                  <p className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-school-red">
+                    {image.group}
+                  </p>
+                  <h3 className="mt-2 font-serif text-2xl">{image.label}</h3>
+                  <p className="mt-2 break-all text-xs leading-5 text-school-muted">
+                    {image.key}
+                  </p>
+
+                  <form
+                    key={`${image.key}-${image.updatedAt}`}
+                    onSubmit={(event) => uploadReplacement(event, image)}
+                    className="mt-5 grid gap-4 border-t border-school-navy/10 pt-5"
+                  >
+                    <label className="grid gap-2 text-[0.6rem] font-bold uppercase tracking-[0.11em] text-school-muted">
+                      Replacement file
+                      <input
+                        type="file"
+                        name="file"
+                        accept="image/jpeg,image/png,image/webp,image/avif"
+                        required
+                        className="block w-full text-xs font-normal normal-case tracking-normal file:mr-3 file:border-0 file:bg-school-cream file:px-3 file:py-2 file:text-[0.6rem] file:font-bold file:uppercase file:tracking-[0.08em] file:text-school-navy"
+                      />
+                    </label>
+                    <label className="grid gap-2 text-[0.6rem] font-bold uppercase tracking-[0.11em] text-school-muted">
+                      Image description
+                      <input
+                        name="altText"
+                        defaultValue={image.altText}
+                        maxLength={220}
+                        placeholder="Describe the image for accessibility"
+                        className="min-h-11 border border-school-navy/15 bg-school-cream px-3 text-sm font-normal normal-case tracking-normal text-school-ink outline-none focus:border-school-red"
+                      />
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="submit"
+                        disabled={saving}
+                        className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 bg-school-red px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-white hover:bg-school-red-dark disabled:cursor-wait disabled:opacity-60"
+                      >
+                        <Upload aria-hidden="true" className="size-4" />
+                        {saving ? "Uploading…" : "Replace image"}
+                      </button>
+                      {image.currentUrl ? (
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() => restoreOriginal(image)}
+                          className="inline-flex min-h-11 items-center justify-center gap-2 border border-school-navy/15 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-navy hover:bg-school-cream disabled:opacity-60"
+                        >
+                          <RotateCcw aria-hidden="true" className="size-4" />
+                          Restore
+                        </button>
+                      ) : null}
+                    </div>
+                  </form>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState
+          Icon={Images}
+          title="Media Library setup required"
+          description="Run supabase/media-library.sql, then reopen this section."
+        />
+      )}
+    </div>
+  );
+}
+
+function LeadershipPanel({
+  profiles,
+  loading,
+  onProfilesChange,
+  onNotice,
+}: {
+  profiles: LeadershipProfile[];
+  loading: boolean;
+  onProfilesChange: (profiles: LeadershipProfile[]) => void;
+  onNotice: (message: string) => void;
+}) {
+  const [savingSlug, setSavingSlug] = useState("");
+
+  async function saveProfile(
+    event: FormEvent<HTMLFormElement>,
+    profile: LeadershipProfile,
+  ) {
+    event.preventDefault();
+    setSavingSlug(profile.slug);
+    try {
+      const response = await fetch("/api/dashboard/leadership", {
+        method: "POST",
+        body: new FormData(event.currentTarget),
+      });
+      const result = (await response.json()) as {
+        profile?: LeadershipProfile;
+        error?: string;
+      };
+      if (!response.ok || !result.profile) {
+        throw new Error(result.error || "The leadership profile could not be saved.");
+      }
+      onProfilesChange(
+        profiles.map((item) =>
+          item.slug === result.profile?.slug ? result.profile : item,
+        ),
+      );
+      onNotice(`${result.profile.name}'s leadership profile has been updated.`);
+    } catch (error) {
+      onNotice(
+        error instanceof Error
+          ? error.message
+          : "The leadership profile could not be saved.",
+      );
+    } finally {
+      setSavingSlug("");
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="border border-school-navy/10 bg-white p-10 text-center text-sm text-school-muted">
+        Loading leadership profiles…
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <p className="text-[0.66rem] font-bold uppercase tracking-[0.17em] text-school-red">
+        People and responsibilities
+      </p>
+      <h2 className="mt-3 font-serif text-4xl tracking-[-0.035em] sm:text-5xl">
+        Leadership profiles
+      </h2>
+      <p className="mt-4 max-w-3xl text-sm leading-7 text-school-muted">
+        Update each leader’s name, role, biography and portrait. Every profile
+        has its own independent photo.
+      </p>
+
+      {profiles.length > 0 ? (
+        <div className="mt-8 grid gap-6 xl:grid-cols-2">
+          {profiles.map((profile) => {
+            const saving = savingSlug === profile.slug;
+            return (
+              <form
+                key={`${profile.slug}-${profile.updatedAt}`}
+                onSubmit={(event) => saveProfile(event, profile)}
+                className="overflow-hidden border border-school-navy/10 bg-white shadow-sm"
+              >
+                <input type="hidden" name="slug" value={profile.slug} />
+                <div className="grid sm:grid-cols-[180px_minmax(0,1fr)]">
+                  <div className="relative min-h-52 bg-school-navy">
+                    {profile.photoUrl ? (
+                      <Image
+                        src={profile.photoUrl}
+                        alt=""
+                        fill
+                        unoptimized
+                        sizes="180px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-full min-h-52 items-center justify-center font-serif text-5xl text-white/85">
+                        {initials(profile.name)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid gap-4 p-5">
+                    <DashboardField label="Name">
+                      <input
+                        name="name"
+                        defaultValue={profile.name}
+                        required
+                        maxLength={120}
+                        className="min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm outline-none focus:border-school-red"
+                      />
+                    </DashboardField>
+                    <DashboardField label="Role">
+                      <input
+                        name="role"
+                        defaultValue={profile.role}
+                        required
+                        maxLength={120}
+                        className="min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm outline-none focus:border-school-red"
+                      />
+                    </DashboardField>
+                    <DashboardField label="Leadership area">
+                      <input
+                        name="area"
+                        defaultValue={profile.area}
+                        required
+                        maxLength={80}
+                        className="min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm outline-none focus:border-school-red"
+                      />
+                    </DashboardField>
+                  </div>
+                </div>
+                <div className="grid gap-4 border-t border-school-navy/10 p-5">
+                  <DashboardField label="Biography">
+                    <textarea
+                      name="description"
+                      defaultValue={profile.description}
+                      required
+                      maxLength={600}
+                      className="min-h-28 w-full resize-y border border-school-navy/15 bg-school-cream px-3 py-3 text-sm leading-6 outline-none focus:border-school-red"
+                    />
+                  </DashboardField>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <DashboardField label="Portrait">
+                      <input
+                        type="file"
+                        name="file"
+                        accept="image/jpeg,image/png,image/webp,image/avif"
+                        className="block w-full text-xs file:mr-3 file:border-0 file:bg-school-cream file:px-3 file:py-2 file:text-[0.6rem] file:font-bold file:uppercase"
+                      />
+                    </DashboardField>
+                    <DashboardField label="Portrait description">
+                      <input
+                        name="photoAlt"
+                        defaultValue={profile.photoAlt}
+                        maxLength={220}
+                        placeholder={`${profile.name}, ${profile.role}`}
+                        className="min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm outline-none focus:border-school-red"
+                      />
+                    </DashboardField>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <label className="flex items-center gap-3 text-sm text-school-muted">
+                      <input
+                        type="checkbox"
+                        name="confirmed"
+                        defaultChecked={profile.confirmed}
+                        className="size-4 accent-school-red"
+                      />
+                      Profile is confirmed and ready to publish
+                    </label>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="inline-flex min-h-11 items-center justify-center gap-2 bg-school-red px-5 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-white hover:bg-school-red-dark disabled:cursor-wait disabled:opacity-60"
+                    >
+                      <Upload aria-hidden="true" className="size-4" />
+                      {saving ? "Saving…" : "Save profile"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState
+          Icon={UsersRound}
+          title="Leadership setup required"
+          description="Run supabase/media-library.sql again, then reopen this section."
+        />
+      )}
+    </div>
   );
 }
 

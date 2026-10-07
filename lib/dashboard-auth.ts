@@ -1,51 +1,47 @@
-import { getChatGPTUser, type ChatGPTUser } from "@/app/chatgpt-auth";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type DashboardAccessMode = "platform" | "local-preview";
+export type DashboardAccessMode = "supabase";
 
-export function getLocalDashboardUser(): ChatGPTUser | null {
-  const previewEnabled =
-    process.env.NODE_ENV !== "production" &&
-    process.env.DASHBOARD_LOCAL_PREVIEW?.trim().toLowerCase() === "true";
+export type DashboardUser = {
+  id: string;
+  displayName: string;
+  email: string;
+  isAdmin: boolean;
+};
 
-  if (!previewEnabled) return null;
+export async function getDashboardIdentity(): Promise<DashboardUser | null> {
+  if (!isSupabaseConfigured()) return null;
 
-  const email =
-    process.env.DASHBOARD_LOCAL_PREVIEW_EMAIL?.trim() ??
-    "admin@local.preview";
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user?.email) return null;
+
   const fullName =
-    process.env.DASHBOARD_LOCAL_PREVIEW_NAME?.trim() ??
-    "Local Administrator";
+    typeof data.user.user_metadata?.full_name === "string"
+      ? data.user.user_metadata.full_name.trim()
+      : "";
 
   return {
-    displayName: fullName,
-    email,
-    fullName,
+    id: data.user.id,
+    displayName: fullName || data.user.email.split("@")[0],
+    email: data.user.email,
+    isAdmin: data.user.app_metadata?.role === "admin",
   };
 }
 
-export function isDashboardAdmin(email: string): boolean {
-  const normalisedEmail = email.trim().toLowerCase();
-  const approvedAdmins = (process.env.DASHBOARD_ALLOWED_EMAILS ?? "")
-    .split(",")
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean);
-
-  return approvedAdmins.includes(normalisedEmail);
-}
-
-export async function getDashboardUser(): Promise<ChatGPTUser | null> {
-  const localUser = getLocalDashboardUser();
-  if (localUser) return localUser;
-
-  const user = await getChatGPTUser();
-  return user && isDashboardAdmin(user.email) ? user : null;
-}
-
 export async function requireDashboardApiUser() {
-  const localUser = getLocalDashboardUser();
-  if (localUser) return { user: localUser, error: null };
+  if (!isSupabaseConfigured()) {
+    return {
+      user: null,
+      error: Response.json(
+        { error: "The dashboard database has not been configured yet." },
+        { status: 503 },
+      ),
+    };
+  }
 
-  const user = await getChatGPTUser();
+  const user = await getDashboardIdentity();
   if (!user) {
     return {
       user: null,
@@ -56,7 +52,7 @@ export async function requireDashboardApiUser() {
     };
   }
 
-  if (!isDashboardAdmin(user.email)) {
+  if (!user.isAdmin) {
     return {
       user: null,
       error: Response.json(
