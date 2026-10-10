@@ -1,6 +1,6 @@
 import {
+  deleteSiteImageOverride,
   getSiteImages,
-  resetSiteImage,
   updateSiteImage,
 } from "@/db/dashboard";
 import { requireDashboardApiUser } from "@/lib/dashboard-auth";
@@ -80,6 +80,10 @@ export async function POST(request: Request) {
       updatedBy: access.user.id,
     });
 
+    if (slot.currentUrl) {
+      await removeStoredImage(supabase, slot.currentUrl);
+    }
+
     return Response.json({ image });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
@@ -102,12 +106,35 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const image = await resetSiteImage(slot);
-    return Response.json({ image });
+    const image = await deleteSiteImageOverride(slot);
+    let warning: string | undefined;
+    if (slot.currentUrl) {
+      const supabase = await createSupabaseServerClient();
+      const removed = await removeStoredImage(supabase, slot.currentUrl);
+      if (!removed) warning = "The website was restored, but the old file could not be removed from storage.";
+    }
+    return Response.json({ image, warning });
   } catch {
     return Response.json(
       { error: "The original image could not be restored." },
       { status: 500 },
     );
+  }
+}
+
+async function removeStoredImage(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  publicUrl: string,
+) {
+  try {
+    const marker = "/storage/v1/object/public/site-images/";
+    const path = new URL(publicUrl).pathname.split(marker)[1];
+    if (!path) return false;
+    const { error } = await supabase.storage
+      .from("site-images")
+      .remove([decodeURIComponent(path)]);
+    return !error;
+  } catch {
+    return false;
   }
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { StoryArticle } from "@/components/StoryArticle";
 import { getPublicStory } from "@/data/story-service";
+import { notFound } from "next/navigation";
 import { getStory } from "../../../data/stories";
 
 const story = getStory("confidence-to-compete")!;
@@ -14,5 +15,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ConfidenceToCompetePage() {
-  return <StoryArticle story={(await getPublicStory(story.slug)) ?? story} />;
+  const currentStory = await getPublicStory(story.slug);
+  if (!currentStory) notFound();
+  return <StoryArticle story={currentStory} />;
 }

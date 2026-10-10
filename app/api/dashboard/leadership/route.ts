@@ -1,4 +1,5 @@
 import {
+  deleteLeadershipProfile,
   getDashboardLeadershipProfiles,
   updateLeadershipProfile,
 } from "@/db/dashboard";
@@ -23,6 +24,28 @@ export async function GET() {
     return Response.json(
       { error: "Leadership editing is not ready. Run supabase/media-library.sql again." },
       { status: 503 },
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  const access = await requireDashboardApiUser();
+  if (access.error) return access.error;
+  try {
+    const payload = (await request.json()) as { slug?: string };
+    const slug = String(payload.slug ?? "");
+    const current = (await getDashboardLeadershipProfiles()).find(
+      (profile) => profile.slug === slug,
+    );
+    if (!current) {
+      return Response.json({ error: "Unknown leadership profile." }, { status: 400 });
+    }
+    await deleteLeadershipProfile(slug);
+    return Response.json({ ok: true });
+  } catch {
+    return Response.json(
+      { error: "The leadership profile could not be deleted." },
+      { status: 500 },
     );
   }
 }

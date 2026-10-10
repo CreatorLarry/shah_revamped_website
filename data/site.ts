@@ -69,6 +69,7 @@ export const navigation = [
   },
   { label: "School Life", href: "/school-life" },
   { label: "Stories", href: "/stories" },
+  { label: "Events", href: "/events" },
   { label: "Gallery", href: "/gallery" },
   { label: "Contact", href: "/contact" },
 ] as const;

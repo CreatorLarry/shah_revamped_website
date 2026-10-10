@@ -32,6 +32,7 @@ const fixedSlots: SiteImageSlot[] = [
   { key: "contact.hero", label: "Contact hero", group: "Contact", defaultUrl: "/images/school/school-event-leadership.webp" },
   { key: "contact.visit", label: "Contact visit feature", group: "Contact", defaultUrl: "/images/school/campus-assembly.webp" },
   { key: "stories.hero", label: "Stories page hero", group: "Stories", defaultUrl: "/images/school/senior-students-community.webp" },
+  { key: "events.hero", label: "Upcoming Events page hero", group: "Events", defaultUrl: "/images/school/campus-assembly.webp" },
   { key: "gallery.hero", label: "Gallery hero", group: "Gallery", defaultUrl: "/images/school/creative-arts-masks.webp" },
   { key: "leadership.smt.hero", label: "Senior Management Team hero", group: "Leadership", defaultUrl: "/images/school/school-event-leadership.webp" },
   { key: "leadership.board-chair.hero", label: "Board Chair message hero", group: "Leadership", defaultUrl: "/images/chairman-portrait.jpg" },

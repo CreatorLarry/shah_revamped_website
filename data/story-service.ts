@@ -6,8 +6,7 @@ import { getStory, stories, type Story } from "@/data/stories";
 
 export async function getPublicStories(): Promise<Story[]> {
   try {
-    const storedStories = await getPublishedStories();
-    return storedStories.length > 0 ? storedStories : [...stories];
+    return await getPublishedStories();
   } catch {
     return [...stories];
   }
@@ -15,10 +14,9 @@ export async function getPublicStories(): Promise<Story[]> {
 
 export async function getPublicStory(slug: string): Promise<Story | undefined> {
   try {
-    const storedStory = await getPublishedStory(slug);
-    if (storedStory) return storedStory;
+    return (await getPublishedStory(slug)) ?? undefined;
   } catch {
-    // The bundled stories keep the public website available before D1 setup.
+    // The bundled stories keep the public website available before database setup.
+    return getStory(slug);
   }
-  return getStory(slug);
 }

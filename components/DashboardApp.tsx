@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   ArrowUpRight,
   BookOpenText,
+  CalendarDays,
   CheckCircle2,
   CircleAlert,
   Clock3,
@@ -16,7 +17,9 @@ import {
   Search,
   Send,
   Settings,
-  RotateCcw,
+  Pencil,
+  Plus,
+  Trash2,
   Upload,
   UsersRound,
   X,
@@ -28,6 +31,7 @@ import {
 } from "@/components/ManagedImage";
 import type {
   DashboardSnapshot,
+  DashboardEvent,
   DashboardStory,
   Enquiry,
   LeadershipProfile,
@@ -37,6 +41,7 @@ import type {
 type DashboardSection =
   | "overview"
   | "stories"
+  | "events"
   | "media"
   | "leadership"
   | "enquiries";
@@ -52,6 +57,7 @@ type DashboardAppProps = {
 const navigation = [
   { id: "overview", label: "Overview", Icon: LayoutDashboard },
   { id: "stories", label: "Stories", Icon: BookOpenText },
+  { id: "events", label: "Events", Icon: CalendarDays },
   { id: "media", label: "Media", Icon: Images },
   { id: "leadership", label: "Leadership", Icon: UsersRound },
   { id: "enquiries", label: "Enquiries", Icon: Inbox },
@@ -73,9 +79,9 @@ export function DashboardApp({
   const [section, setSection] = useState<DashboardSection>("overview");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [stories, setStories] = useState(initialSnapshot.stories);
+  const [events, setEvents] = useState(initialSnapshot.events);
   const [enquiries, setEnquiries] = useState(initialSnapshot.enquiries);
   const [media, setMedia] = useState<SiteImage[]>([]);
-  const [mediaLoaded, setMediaLoaded] = useState(false);
   const [mediaLoading, setMediaLoading] = useState(false);
   const [leadership, setLeadership] = useState<LeadershipProfile[]>([]);
   const [leadershipLoaded, setLeadershipLoaded] = useState(false);
@@ -85,7 +91,7 @@ export function DashboardApp({
   async function openSection(nextSection: DashboardSection) {
     setSection(nextSection);
     setMobileMenuOpen(false);
-    if (nextSection === "media" && !mediaLoaded && !mediaLoading) {
+    if (nextSection === "media" && !mediaLoading) {
       setMediaLoading(true);
       try {
         const response = await fetch("/api/dashboard/media");
@@ -97,7 +103,6 @@ export function DashboardApp({
           throw new Error(result.error || "The Media Library could not be loaded.");
         }
         setMedia(result.images ?? []);
-        setMediaLoaded(true);
       } catch (error) {
         setNotice(
           error instanceof Error
@@ -273,7 +278,7 @@ export function DashboardApp({
               aria-label="Dashboard mobile navigation"
               className="border-t border-school-navy/10 bg-white px-4 py-3 lg:hidden"
             >
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                 {navigation.map(({ id, label, Icon }) => (
                   <button
                     key={id}
@@ -297,14 +302,15 @@ export function DashboardApp({
         <main className="px-4 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
           {notice ? (
             <div
-              role="status"
-              className="mb-7 flex items-start justify-between gap-5 border-l-4 border-school-red bg-white p-5 text-sm text-school-muted shadow-sm"
+              role={isErrorNotice(notice) ? "alert" : "status"}
+              className={`fixed bottom-5 left-5 right-5 z-[70] flex max-w-md items-start justify-between gap-5 border-l-4 bg-white p-5 text-sm text-school-ink shadow-[0_18px_55px_rgba(6,47,95,0.2)] sm:left-auto ${isErrorNotice(notice) ? "border-school-red" : "border-emerald-600"}`}
             >
               <span className="flex gap-3">
-                <CircleAlert
-                  aria-hidden="true"
-                  className="mt-0.5 size-5 shrink-0 text-school-red"
-                />
+                {isErrorNotice(notice) ? (
+                  <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-school-red" />
+                ) : (
+                  <CheckCircle2 aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-emerald-600" />
+                )}
                 {notice}
               </span>
               <button
@@ -334,6 +340,14 @@ export function DashboardApp({
             <StoriesPanel
               stories={stories}
               onStoriesChange={setStories}
+              onNotice={setNotice}
+            />
+          ) : null}
+
+          {section === "events" ? (
+            <EventsPanel
+              events={events}
+              onEventsChange={setEvents}
               onNotice={setNotice}
             />
           ) : null}
@@ -399,8 +413,8 @@ function OverviewPanel({
             {firstName(displayName)}, here’s today’s picture.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-school-muted">
-            Keep school stories current and make sure every prospective family
-            receives a timely response.
+            Keep stories, events, leadership and photography current while every
+            prospective family receives a timely response.
           </p>
         </div>
         <button
@@ -504,10 +518,10 @@ function OverviewPanel({
             className="size-8 text-school-gold"
             strokeWidth={1.4}
           />
-          <h3 className="mt-8 font-serif text-3xl">A focused first release.</h3>
+          <h3 className="mt-8 font-serif text-3xl">One connected publishing desk.</h3>
           <p className="mt-4 text-sm leading-7 text-white/65">
-            This workspace begins with the two jobs the school needs most:
-            publishing stories and responding to families.
+            Website content, photography, leadership profiles, upcoming dates
+            and admissions enquiries now live in one secure workspace.
           </p>
           <div className="mt-8 border-t border-white/12 pt-6">
             <p className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-school-gold">
@@ -534,6 +548,7 @@ function StoriesPanel({
   onNotice: (message: string) => void;
 }) {
   const [showForm, setShowForm] = useState(false);
+  const [editingStory, setEditingStory] = useState<DashboardStory | null>(null);
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const filteredStories = useMemo(() => {
@@ -547,44 +562,53 @@ function StoriesPanel({
       : stories;
   }, [search, stories]);
 
-  async function refreshStories() {
-    const response = await fetch("/api/dashboard/stories");
-    const result = (await response.json()) as {
-      stories?: DashboardStory[];
-      error?: string;
-    };
-    if (!response.ok || !result.stories) {
-      throw new Error(result.error || "Stories could not be refreshed.");
-    }
-    onStoriesChange(result.stories);
-  }
-
-  async function createNewStory(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const values = Object.fromEntries(new FormData(form).entries());
+  async function saveStory(values: StoryEditorPayload) {
     setSaving(true);
 
     try {
-      const response = await fetch("/api/dashboard/stories", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const result = (await response.json()) as { error?: string };
-      if (!response.ok) {
+      const response = await fetch(
+        editingStory ? `/api/dashboard/stories/${editingStory.id}` : "/api/dashboard/stories",
+        {
+          method: editingStory ? "PATCH" : "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(values),
+        },
+      );
+      const result = (await response.json()) as { story?: DashboardStory; error?: string };
+      if (!response.ok || !result.story) {
         throw new Error(result.error || "The story could not be saved.");
       }
-      await refreshStories();
-      form.reset();
+      onStoriesChange(
+        editingStory
+          ? stories.map((story) => story.id === result.story?.id ? result.story : story)
+          : [result.story, ...stories],
+      );
       setShowForm(false);
-      onNotice("The new story has been saved.");
+      setEditingStory(null);
+      onNotice(editingStory ? "The story changes are now live." : "The new story has been saved.");
     } catch (error) {
       onNotice(
         error instanceof Error ? error.message : "The story could not be saved.",
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function deleteSelectedStory(story: DashboardStory) {
+    if (!window.confirm(`Delete “${story.title}”? This cannot be undone.`)) return;
+    try {
+      const response = await fetch(`/api/dashboard/stories/${story.id}`, { method: "DELETE" });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error || "The story could not be deleted.");
+      onStoriesChange(stories.filter((item) => item.id !== story.id));
+      if (editingStory?.id === story.id) {
+        setEditingStory(null);
+        setShowForm(false);
+      }
+      onNotice("The story has been deleted from the website.");
+    } catch (error) {
+      onNotice(error instanceof Error ? error.message : "The story could not be deleted.");
     }
   }
 
@@ -640,7 +664,15 @@ function StoriesPanel({
         </div>
         <button
           type="button"
-          onClick={() => setShowForm((open) => !open)}
+          onClick={() => {
+            if (showForm) {
+              setShowForm(false);
+              setEditingStory(null);
+            } else {
+              setEditingStory(null);
+              setShowForm(true);
+            }
+          }}
           className="inline-flex min-h-12 items-center justify-center gap-3 bg-school-red px-5 text-[0.68rem] font-bold uppercase tracking-[0.13em] text-white transition-colors hover:bg-school-red-dark"
         >
           {showForm ? (
@@ -653,7 +685,16 @@ function StoriesPanel({
       </div>
 
       {showForm ? (
-        <StoryCreateForm onSubmit={createNewStory} saving={saving} />
+        <StoryCreateForm
+          key={editingStory?.id ?? "new"}
+          story={editingStory}
+          onSubmit={saveStory}
+          onCancel={() => {
+            setShowForm(false);
+            setEditingStory(null);
+          }}
+          saving={saving}
+        />
       ) : null}
 
       <section className="mt-8 border border-school-navy/10 bg-white shadow-sm">
@@ -689,6 +730,7 @@ function StoriesPanel({
                 <div className="relative aspect-[4/3] overflow-hidden bg-school-stone">
                   <Image
                     src={story.image}
+                    imageKey={`story.${story.slug}.hero`}
                     alt=""
                     fill
                     unoptimized
@@ -713,6 +755,17 @@ function StoriesPanel({
                 <div className="flex flex-wrap gap-2 sm:flex-col sm:items-stretch">
                   <button
                     type="button"
+                    onClick={() => {
+                      setEditingStory(story);
+                      setShowForm(true);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 border border-school-navy/15 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-navy hover:bg-school-cream"
+                  >
+                    <Pencil aria-hidden="true" className="size-3.5" /> Edit
+                  </button>
+                  <button
+                    type="button"
                     onClick={() =>
                       changeStatus(
                         story,
@@ -731,6 +784,13 @@ function StoriesPanel({
                     Preview
                     <ArrowUpRight aria-hidden="true" className="size-3.5" />
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => void deleteSelectedStory(story)}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 border border-school-red/25 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-red hover:bg-school-red hover:text-white"
+                  >
+                    <Trash2 aria-hidden="true" className="size-3.5" /> Delete
+                  </button>
                 </div>
               </article>
             ))}
@@ -747,19 +807,72 @@ function StoriesPanel({
   );
 }
 
+type StoryEditorPayload = {
+  title: string;
+  slug: string;
+  category: string;
+  readTime: string;
+  image: string;
+  alt: string;
+  excerpt: string;
+  quote: string;
+  status: "draft" | "published";
+  sections: Array<{
+    heading: string;
+    paragraphs: string[];
+    image?: string;
+    imageAlt?: string;
+  }>;
+};
+
 function StoryCreateForm({
+  story,
   onSubmit,
+  onCancel,
   saving,
 }: {
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  story: DashboardStory | null;
+  onSubmit: (values: StoryEditorPayload) => void;
+  onCancel: () => void;
   saving: boolean;
 }) {
   const inputClass =
-    "min-h-11 w-full border border-school-navy/15 bg-white px-4 py-3 text-sm outline-none focus:border-school-red focus:ring-1 focus:ring-school-red";
+    "min-h-11 w-full border border-school-navy/15 bg-white px-4 py-3 text-sm font-normal normal-case tracking-normal text-school-ink outline-none placeholder:text-school-muted/60 focus:border-school-red focus:ring-1 focus:ring-school-red";
+  const [sections, setSections] = useState(() =>
+    story?.sections.length
+      ? story.sections.map((section) => ({
+          heading: section.heading,
+          paragraphs: [...section.paragraphs],
+          image: section.image ?? "",
+          imageAlt: section.imageAlt ?? "",
+        }))
+      : [{ heading: "The story", paragraphs: [""], image: "", imageAlt: "" }],
+  );
+
+  function submitStory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(event.currentTarget).entries());
+    onSubmit({
+      title: String(values.title ?? ""),
+      slug: String(values.slug ?? ""),
+      category: String(values.category ?? ""),
+      readTime: String(values.readTime ?? ""),
+      image: String(values.image ?? ""),
+      alt: String(values.alt ?? ""),
+      excerpt: String(values.excerpt ?? ""),
+      quote: String(values.quote ?? ""),
+      status: values.status === "published" ? "published" : "draft",
+      sections: sections.map((section) => ({
+        heading: section.heading,
+        paragraphs: section.paragraphs.filter(Boolean),
+        ...(section.image ? { image: section.image, imageAlt: section.imageAlt } : {}),
+      })),
+    });
+  }
 
   return (
     <form
-      onSubmit={onSubmit}
+      onSubmit={submitStory}
       className="mt-8 border-t-4 border-school-gold bg-school-navy p-6 text-white shadow-sm sm:p-8"
     >
       <div className="flex items-start justify-between gap-5">
@@ -767,7 +880,9 @@ function StoryCreateForm({
           <p className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-school-gold">
             Story editor
           </p>
-          <h3 className="mt-3 font-serif text-3xl">Create a new story</h3>
+          <h3 className="mt-3 font-serif text-3xl">
+            {story ? `Edit ${story.title}` : "Create a new story"}
+          </h3>
         </div>
         <FilePlus2
           aria-hidden="true"
@@ -781,6 +896,7 @@ function StoryCreateForm({
           <input
             className={inputClass}
             name="title"
+            defaultValue={story?.title}
             required
             onBlur={(event) => {
               const form = event.currentTarget.form;
@@ -797,6 +913,7 @@ function StoryCreateForm({
           <input
             className={inputClass}
             name="slug"
+            defaultValue={story?.slug}
             placeholder="example-story-title"
             pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
             required
@@ -806,6 +923,7 @@ function StoryCreateForm({
           <input
             className={inputClass}
             name="category"
+            defaultValue={story?.category}
             placeholder="School Life"
             required
           />
@@ -814,14 +932,14 @@ function StoryCreateForm({
           <input
             className={inputClass}
             name="readTime"
-            defaultValue="4 minute read"
+            defaultValue={story?.readTime ?? "4 minute read"}
           />
         </DashboardField>
         <DashboardField label="Hero image path">
           <input
             className={inputClass}
             name="image"
-            defaultValue="/images/school/campus-assembly.webp"
+            defaultValue={story?.image ?? "/images/school/campus-assembly.webp"}
             required
           />
         </DashboardField>
@@ -829,6 +947,7 @@ function StoryCreateForm({
           <input
             className={inputClass}
             name="alt"
+            defaultValue={story?.alt}
             placeholder="Describe the photograph"
             required
           />
@@ -840,6 +959,7 @@ function StoryCreateForm({
           <textarea
             className={`${inputClass} min-h-28 resize-y`}
             name="excerpt"
+            defaultValue={story?.excerpt}
             required
           />
         </DashboardField>
@@ -847,8 +967,57 @@ function StoryCreateForm({
           <textarea
             className={`${inputClass} min-h-24 resize-y`}
             name="quote"
+            defaultValue={story?.quote}
           />
         </DashboardField>
+      </div>
+
+      <div className="mt-8 border-t border-white/15 pt-7">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-school-gold">Full story</p>
+            <p className="mt-2 text-sm text-white/65">Edit every section. Separate paragraphs with a blank line.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSections((items) => [...items, { heading: "", paragraphs: [""], image: "", imageAlt: "" }])}
+            className="inline-flex min-h-10 items-center gap-2 border border-white/25 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-white hover:bg-white hover:text-school-navy"
+          >
+            <Plus aria-hidden="true" className="size-4" /> Add section
+          </button>
+        </div>
+        <div className="mt-5 grid gap-5">
+          {sections.map((section, index) => (
+            <section key={index} className="border border-white/15 bg-white/6 p-5">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-white/70">Section {index + 1}</p>
+                {sections.length > 1 ? (
+                  <button type="button" onClick={() => setSections((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="inline-flex items-center gap-2 text-xs font-bold uppercase text-school-gold hover:text-white">
+                    <Trash2 aria-hidden="true" className="size-3.5" /> Remove
+                  </button>
+                ) : null}
+              </div>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <DashboardField label="Section heading">
+                  <input className={inputClass} value={section.heading} required onChange={(event) => setSections((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, heading: event.target.value } : item))} />
+                </DashboardField>
+                <DashboardField label="Section image path (optional)">
+                  <input className={inputClass} value={section.image} onChange={(event) => setSections((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, image: event.target.value } : item))} />
+                </DashboardField>
+                <div className="md:col-span-2">
+                  <DashboardField label="Paragraphs">
+                    <textarea className={`${inputClass} min-h-32 resize-y`} value={section.paragraphs.join("\n\n")} required onChange={(event) => setSections((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, paragraphs: event.target.value.split(/\n\s*\n/).map((paragraph) => paragraph.trim()) } : item))} />
+                  </DashboardField>
+                </div>
+                <div className="md:col-span-2">
+                  <DashboardField label="Section image description">
+                    <input className={inputClass} value={section.imageAlt} onChange={(event) => setSections((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, imageAlt: event.target.value } : item))} />
+                  </DashboardField>
+                </div>
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
 
       <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -857,18 +1026,215 @@ function StoryCreateForm({
             type="checkbox"
             name="status"
             value="published"
+            defaultChecked={story?.status === "published"}
             className="size-4 accent-school-gold"
           />
           Publish immediately
         </label>
-        <button
-          type="submit"
-          disabled={saving}
-          className="inline-flex min-h-12 items-center justify-center gap-3 bg-school-red px-6 text-[0.68rem] font-bold uppercase tracking-[0.13em] text-white hover:bg-school-red-dark disabled:cursor-wait disabled:opacity-60"
-        >
-          <Send aria-hidden="true" className="size-4" />
-          {saving ? "Saving…" : "Save story"}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button type="button" onClick={onCancel} className="min-h-12 border border-white/25 px-5 text-[0.68rem] font-bold uppercase tracking-[0.13em] text-white hover:bg-white hover:text-school-navy">Cancel</button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex min-h-12 items-center justify-center gap-3 bg-school-red px-6 text-[0.68rem] font-bold uppercase tracking-[0.13em] text-white hover:bg-school-red-dark disabled:cursor-wait disabled:opacity-60"
+          >
+            <Send aria-hidden="true" className="size-4" />
+            {saving ? "Saving…" : story ? "Save changes" : "Save story"}
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+type EventEditorPayload = {
+  title: string;
+  slug: string;
+  summary: string;
+  description: string;
+  location: string;
+  startsAt: string;
+  endsAt: string | null;
+  image: string;
+  alt: string;
+  status: "draft" | "published";
+};
+
+function EventsPanel({
+  events,
+  onEventsChange,
+  onNotice,
+}: {
+  events: DashboardEvent[];
+  onEventsChange: (events: DashboardEvent[]) => void;
+  onNotice: (message: string) => void;
+}) {
+  const [editingEvent, setEditingEvent] = useState<DashboardEvent | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function saveEvent(values: EventEditorPayload) {
+    setSaving(true);
+    try {
+      const response = await fetch(
+        editingEvent ? `/api/dashboard/events/${editingEvent.id}` : "/api/dashboard/events",
+        {
+          method: editingEvent ? "PATCH" : "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(values),
+        },
+      );
+      const result = (await response.json()) as { event?: DashboardEvent; error?: string };
+      if (!response.ok || !result.event) throw new Error(result.error || "The event could not be saved.");
+      onEventsChange(
+        editingEvent
+          ? events.map((event) => event.id === result.event?.id ? result.event : event)
+          : [...events, result.event].sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+      );
+      setShowForm(false);
+      setEditingEvent(null);
+      onNotice(editingEvent ? "The event changes are now live." : "The upcoming event has been created.");
+    } catch (error) {
+      onNotice(error instanceof Error ? error.message : "The event could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function setEventStatus(event: DashboardEvent) {
+    setSaving(true);
+    try {
+      const status = event.status === "published" ? "draft" : "published";
+      const response = await fetch(`/api/dashboard/events/${event.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...event, status }),
+      });
+      const result = (await response.json()) as { event?: DashboardEvent; error?: string };
+      if (!response.ok || !result.event) throw new Error(result.error || "The event status could not be changed.");
+      onEventsChange(events.map((item) => item.id === event.id ? result.event! : item));
+      onNotice(status === "published" ? "The event is now live on the website." : "The event has returned to draft.");
+    } catch (error) {
+      onNotice(error instanceof Error ? error.message : "The event status could not be changed.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteSelectedEvent(event: DashboardEvent) {
+    if (!window.confirm(`Delete “${event.title}”? This cannot be undone.`)) return;
+    try {
+      const response = await fetch(`/api/dashboard/events/${event.id}`, { method: "DELETE" });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error || "The event could not be deleted.");
+      onEventsChange(events.filter((item) => item.id !== event.id));
+      onNotice("The event has been deleted from the website.");
+    } catch (error) {
+      onNotice(error instanceof Error ? error.message : "The event could not be deleted.");
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <div>
+          <p className="text-[0.66rem] font-bold uppercase tracking-[0.17em] text-school-red">Calendar</p>
+          <h2 className="mt-3 font-serif text-4xl tracking-[-0.035em] sm:text-5xl">Upcoming events</h2>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-school-muted">Create, revise, publish and remove the dates shown on the public Events page.</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/events" target="_blank" className="inline-flex min-h-12 items-center gap-2 border border-school-navy/15 bg-white px-5 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-school-navy">View page <ArrowUpRight aria-hidden="true" className="size-4" /></Link>
+          <button type="button" onClick={() => { setEditingEvent(null); setShowForm((open) => !open); }} className="inline-flex min-h-12 items-center gap-2 bg-school-red px-5 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white hover:bg-school-red-dark">
+            {showForm ? <X aria-hidden="true" className="size-4" /> : <Plus aria-hidden="true" className="size-4" />}
+            {showForm ? "Close editor" : "Add event"}
+          </button>
+        </div>
+      </div>
+
+      {showForm ? (
+        <EventEditor
+          key={editingEvent?.id ?? "new-event"}
+          event={editingEvent}
+          saving={saving}
+          onSubmit={saveEvent}
+          onCancel={() => { setShowForm(false); setEditingEvent(null); }}
+        />
+      ) : null}
+
+      <section className="mt-8 overflow-hidden border border-school-navy/10 bg-white shadow-sm">
+        {events.length ? (
+          <div className="divide-y divide-school-navy/10">
+            {events.map((event) => (
+              <article key={event.id} className="grid gap-5 p-5 sm:grid-cols-[110px_minmax(0,1fr)_auto] sm:items-center sm:px-7">
+                <div className="relative aspect-[4/3] overflow-hidden bg-school-stone">
+                  <Image src={event.image} imageKey={`event.${event.slug}.image`} alt="" fill unoptimized sizes="110px" className="object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-3"><StatusBadge status={event.status} /><span className="text-xs text-school-muted">{formatEventDashboardDate(event.startsAt)}</span></div>
+                  <h3 className="mt-3 font-serif text-2xl">{event.title}</h3>
+                  <p className="mt-2 text-sm text-school-muted">{event.location}</p>
+                </div>
+                <div className="flex flex-wrap gap-2 sm:flex-col">
+                  <button type="button" onClick={() => { setEditingEvent(event); setShowForm(true); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="inline-flex min-h-10 items-center justify-center gap-2 border border-school-navy/15 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-navy"><Pencil aria-hidden="true" className="size-3.5" /> Edit</button>
+                  <button type="button" onClick={() => void setEventStatus(event)} className="min-h-10 border border-school-navy/15 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-navy">{event.status === "published" ? "Move to draft" : "Publish"}</button>
+                  <button type="button" onClick={() => void deleteSelectedEvent(event)} className="inline-flex min-h-10 items-center justify-center gap-2 border border-school-red/25 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-red hover:bg-school-red hover:text-white"><Trash2 aria-hidden="true" className="size-3.5" /> Delete</button>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState Icon={CalendarDays} title="No upcoming events yet" description="Add the first event, then publish it when the details are ready." />
+        )}
+      </section>
+    </div>
+  );
+}
+
+function EventEditor({ event, saving, onSubmit, onCancel }: {
+  event: DashboardEvent | null;
+  saving: boolean;
+  onSubmit: (values: EventEditorPayload) => void;
+  onCancel: () => void;
+}) {
+  const inputClass = "min-h-11 w-full border border-school-navy/15 bg-white px-4 py-3 text-sm font-normal normal-case tracking-normal text-school-ink outline-none placeholder:text-school-muted/60 focus:border-school-red";
+
+  function submit(eventForm: FormEvent<HTMLFormElement>) {
+    eventForm.preventDefault();
+    const values = Object.fromEntries(new FormData(eventForm.currentTarget).entries());
+    const startsAt = new Date(String(values.startsAt)).toISOString();
+    const endsValue = String(values.endsAt ?? "");
+    onSubmit({
+      title: String(values.title ?? ""),
+      slug: String(values.slug ?? ""),
+      summary: String(values.summary ?? ""),
+      description: String(values.description ?? ""),
+      location: String(values.location ?? ""),
+      startsAt,
+      endsAt: endsValue ? new Date(endsValue).toISOString() : null,
+      image: String(values.image ?? ""),
+      alt: String(values.alt ?? ""),
+      status: values.status === "published" ? "published" : "draft",
+    });
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-8 border-t-4 border-school-gold bg-school-navy p-6 text-white shadow-sm sm:p-8">
+      <p className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-school-gold">Event editor</p>
+      <h3 className="mt-3 font-serif text-3xl">{event ? `Edit ${event.title}` : "Create an upcoming event"}</h3>
+      <div className="mt-7 grid gap-5 md:grid-cols-2">
+        <DashboardField label="Event title"><input className={inputClass} name="title" defaultValue={event?.title} required onBlur={(change) => { const slug = change.currentTarget.form?.elements.namedItem("slug") as HTMLInputElement | null; if (slug && !slug.value) slug.value = slugify(change.currentTarget.value); }} /></DashboardField>
+        <DashboardField label="Web address"><input className={inputClass} name="slug" defaultValue={event?.slug} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required /></DashboardField>
+        <DashboardField label="Starts"><input className={inputClass} type="datetime-local" name="startsAt" defaultValue={toLocalDateTime(event?.startsAt)} required /></DashboardField>
+        <DashboardField label="Ends (optional)"><input className={inputClass} type="datetime-local" name="endsAt" defaultValue={toLocalDateTime(event?.endsAt)} /></DashboardField>
+        <DashboardField label="Location"><input className={inputClass} name="location" defaultValue={event?.location} required /></DashboardField>
+        <DashboardField label="Image path"><input className={inputClass} name="image" defaultValue={event?.image ?? "/images/school/campus-assembly.webp"} required /></DashboardField>
+        <div className="md:col-span-2"><DashboardField label="Image description"><input className={inputClass} name="alt" defaultValue={event?.alt} required /></DashboardField></div>
+        <div className="md:col-span-2"><DashboardField label="Short summary"><textarea className={`${inputClass} min-h-24 resize-y`} name="summary" defaultValue={event?.summary} required /></DashboardField></div>
+        <div className="md:col-span-2"><DashboardField label="Full details"><textarea className={`${inputClass} min-h-36 resize-y`} name="description" defaultValue={event?.description} required /></DashboardField></div>
+      </div>
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <label className="flex items-center gap-3 text-sm text-white/72"><input type="checkbox" name="status" value="published" defaultChecked={event?.status === "published"} className="size-4 accent-school-gold" /> Publish on the Events page</label>
+        <div className="flex gap-3"><button type="button" onClick={onCancel} className="min-h-12 border border-white/25 px-5 text-[0.68rem] font-bold uppercase tracking-[0.12em]">Cancel</button><button type="submit" disabled={saving} className="inline-flex min-h-12 items-center gap-2 bg-school-red px-6 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white disabled:opacity-60"><Send aria-hidden="true" className="size-4" />{saving ? "Saving…" : "Save event"}</button></div>
       </div>
     </form>
   );
@@ -935,6 +1301,7 @@ function MediaPanel({
   }
 
   async function restoreOriginal(image: SiteImage) {
+    if (!window.confirm(`Remove the replacement for “${image.label}” and restore the original image?`)) return;
     setSavingKey(image.key);
     try {
       const response = await fetch("/api/dashboard/media", {
@@ -944,6 +1311,7 @@ function MediaPanel({
       });
       const result = (await response.json()) as {
         image?: SiteImage;
+        warning?: string;
         error?: string;
       };
       if (!response.ok || !result.image) {
@@ -956,7 +1324,7 @@ function MediaPanel({
         ),
       );
       refreshManagedImageRegistry();
-      onNotice(`${image.label} is using the original website image again.`);
+      onNotice(result.warning || `${image.label} replacement was deleted and the original image is live again.`);
     } catch (error) {
       onNotice(
         error instanceof Error
@@ -1080,8 +1448,8 @@ function MediaPanel({
                           onClick={() => restoreOriginal(image)}
                           className="inline-flex min-h-11 items-center justify-center gap-2 border border-school-navy/15 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-navy hover:bg-school-cream disabled:opacity-60"
                         >
-                          <RotateCcw aria-hidden="true" className="size-4" />
-                          Restore
+                          <Trash2 aria-hidden="true" className="size-4" />
+                          Delete replacement
                         </button>
                       ) : null}
                     </div>
@@ -1114,6 +1482,8 @@ function LeadershipPanel({
   onNotice: (message: string) => void;
 }) {
   const [savingSlug, setSavingSlug] = useState("");
+  const profileInputClass =
+    "min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm font-normal normal-case tracking-normal text-school-ink outline-none placeholder:text-school-muted/60 focus:border-school-red";
 
   async function saveProfile(
     event: FormEvent<HTMLFormElement>,
@@ -1145,6 +1515,26 @@ function LeadershipPanel({
           ? error.message
           : "The leadership profile could not be saved.",
       );
+    } finally {
+      setSavingSlug("");
+    }
+  }
+
+  async function deleteProfile(profile: LeadershipProfile) {
+    if (!window.confirm(`Delete ${profile.name}'s leadership profile? This cannot be undone.`)) return;
+    setSavingSlug(profile.slug);
+    try {
+      const response = await fetch("/api/dashboard/leadership", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ slug: profile.slug }),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error || "The leadership profile could not be deleted.");
+      onProfilesChange(profiles.filter((item) => item.slug !== profile.slug));
+      onNotice("The leadership profile has been deleted from the website.");
+    } catch (error) {
+      onNotice(error instanceof Error ? error.message : "The leadership profile could not be deleted.");
     } finally {
       setSavingSlug("");
     }
@@ -1206,7 +1596,7 @@ function LeadershipPanel({
                         defaultValue={profile.name}
                         required
                         maxLength={120}
-                        className="min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm outline-none focus:border-school-red"
+                        className={profileInputClass}
                       />
                     </DashboardField>
                     <DashboardField label="Role">
@@ -1215,7 +1605,7 @@ function LeadershipPanel({
                         defaultValue={profile.role}
                         required
                         maxLength={120}
-                        className="min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm outline-none focus:border-school-red"
+                        className={profileInputClass}
                       />
                     </DashboardField>
                     <DashboardField label="Leadership area">
@@ -1224,7 +1614,7 @@ function LeadershipPanel({
                         defaultValue={profile.area}
                         required
                         maxLength={80}
-                        className="min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm outline-none focus:border-school-red"
+                        className={profileInputClass}
                       />
                     </DashboardField>
                   </div>
@@ -1236,7 +1626,7 @@ function LeadershipPanel({
                       defaultValue={profile.description}
                       required
                       maxLength={600}
-                      className="min-h-28 w-full resize-y border border-school-navy/15 bg-school-cream px-3 py-3 text-sm leading-6 outline-none focus:border-school-red"
+                      className={`${profileInputClass} min-h-28 resize-y py-3 leading-6`}
                     />
                   </DashboardField>
                   <div className="grid gap-4 md:grid-cols-2">
@@ -1245,7 +1635,7 @@ function LeadershipPanel({
                         type="file"
                         name="file"
                         accept="image/jpeg,image/png,image/webp,image/avif"
-                        className="block w-full text-xs file:mr-3 file:border-0 file:bg-school-cream file:px-3 file:py-2 file:text-[0.6rem] file:font-bold file:uppercase"
+                        className="block w-full text-xs font-normal normal-case tracking-normal text-school-muted file:mr-3 file:border-0 file:bg-school-cream file:px-3 file:py-2 file:text-[0.6rem] file:font-bold file:uppercase file:text-school-navy"
                       />
                     </DashboardField>
                     <DashboardField label="Portrait description">
@@ -1254,7 +1644,7 @@ function LeadershipPanel({
                         defaultValue={profile.photoAlt}
                         maxLength={220}
                         placeholder={`${profile.name}, ${profile.role}`}
-                        className="min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm outline-none focus:border-school-red"
+                        className={profileInputClass}
                       />
                     </DashboardField>
                   </div>
@@ -1268,14 +1658,17 @@ function LeadershipPanel({
                       />
                       Profile is confirmed and ready to publish
                     </label>
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="inline-flex min-h-11 items-center justify-center gap-2 bg-school-red px-5 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-white hover:bg-school-red-dark disabled:cursor-wait disabled:opacity-60"
-                    >
-                      <Upload aria-hidden="true" className="size-4" />
-                      {saving ? "Saving…" : "Save profile"}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" disabled={saving} onClick={() => void deleteProfile(profile)} className="inline-flex min-h-11 items-center justify-center gap-2 border border-school-red/25 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-red hover:bg-school-red hover:text-white disabled:opacity-60"><Trash2 aria-hidden="true" className="size-4" />Delete</button>
+                      <button
+                        type="submit"
+                        disabled={saving}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 bg-school-red px-5 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-white hover:bg-school-red-dark disabled:cursor-wait disabled:opacity-60"
+                      >
+                        <Upload aria-hidden="true" className="size-4" />
+                        {saving ? "Saving…" : "Save profile"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </form>
@@ -1333,6 +1726,19 @@ function EnquiriesPanel({
           ? error.message
           : "The enquiry could not be updated.",
       );
+    }
+  }
+
+  async function deleteSelectedEnquiry(enquiry: Enquiry) {
+    if (!window.confirm(`Delete the enquiry from ${enquiry.parentName}? This cannot be undone.`)) return;
+    try {
+      const response = await fetch(`/api/dashboard/enquiries/${enquiry.id}`, { method: "DELETE" });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error || "The enquiry could not be deleted.");
+      onEnquiriesChange(enquiries.filter((item) => item.id !== enquiry.id));
+      onNotice("The enquiry has been permanently deleted.");
+    } catch (error) {
+      onNotice(error instanceof Error ? error.message : "The enquiry could not be deleted.");
     }
   }
 
@@ -1434,6 +1840,7 @@ function EnquiriesPanel({
                       Update this after contacting the family so the team always
                       sees the latest position.
                     </p>
+                    <button type="button" onClick={() => void deleteSelectedEnquiry(enquiry)} className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 border border-school-red/25 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-red hover:bg-school-red hover:text-white"><Trash2 aria-hidden="true" className="size-3.5" />Delete enquiry</button>
                   </div>
                 </div>
               </article>
@@ -1546,8 +1953,10 @@ function DashboardField({
   children: React.ReactNode;
 }) {
   return (
-    <label className="grid gap-2 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-white/62">
-      {label}
+    <label className="grid gap-2">
+      <span className="text-[0.62rem] font-bold uppercase tracking-[0.12em]">
+        {label}
+      </span>
       {children}
     </label>
   );
@@ -1573,6 +1982,37 @@ function formatDate(value: string) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function formatEventDashboardDate(value: string) {
+  return new Intl.DateTimeFormat("en-KE", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Africa/Nairobi",
+  }).format(new Date(value));
+}
+
+function toLocalDateTime(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  const formatter = new Intl.DateTimeFormat("sv-SE", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Africa/Nairobi",
+  });
+  return formatter.format(date).replace(" ", "T");
+}
+
+function isErrorNotice(message: string) {
+  return /(could not|not ready|required|invalid|failed|error|unavailable)/i.test(message);
 }
 
 function slugify(value: string) {

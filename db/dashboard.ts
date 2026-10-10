@@ -24,8 +24,44 @@ export type Enquiry = {
   updatedAt: string;
 };
 
+export type DashboardEvent = {
+  id: number;
+  slug: string;
+  title: string;
+  summary: string;
+  description: string;
+  location: string;
+  startsAt: string;
+  endsAt: string | null;
+  image: string;
+  alt: string;
+  status: "draft" | "published";
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type StoryMutationInput = Pick<
+  Story,
+  | "slug"
+  | "category"
+  | "title"
+  | "excerpt"
+  | "image"
+  | "alt"
+  | "readTime"
+  | "quote"
+  | "sections"
+> & { status: "draft" | "published" };
+
+export type EventMutationInput = Omit<
+  DashboardEvent,
+  "id" | "createdBy" | "createdAt" | "updatedAt"
+>;
+
 export type DashboardSnapshot = {
   stories: DashboardStory[];
+  events: DashboardEvent[];
   enquiries: Enquiry[];
 };
 
@@ -83,6 +119,23 @@ type EnquiryRow = {
   updated_at: string;
 };
 
+type EventRow = {
+  id: number;
+  slug: string;
+  title: string;
+  summary: string;
+  description: string;
+  location: string;
+  starts_at: string;
+  ends_at: string | null;
+  image_url: string;
+  image_alt: string;
+  status: "draft" | "published";
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 type SiteImageRow = {
   key: string;
   label: string;
@@ -109,12 +162,17 @@ type LeadershipProfileRow = {
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
   const supabase = await createSupabaseServerClient();
-  const [storyResult, enquiryResult] = await Promise.all([
+  const [storyResult, eventResult, enquiryResult] = await Promise.all([
     supabase
       .from("stories")
       .select("*")
       .order("updated_at", { ascending: false })
       .order("id", { ascending: false }),
+    supabase
+      .from("events")
+      .select("*")
+      .order("starts_at", { ascending: true })
+      .order("id", { ascending: true }),
     supabase
       .from("enquiries")
       .select("*")
@@ -127,6 +185,8 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
 
   return {
     stories: (storyResult.data as StoryRow[]).map(mapStory),
+    // Keep the rest of the dashboard usable until the events migration runs.
+    events: eventResult.error ? [] : (eventResult.data as EventRow[]).map(mapEvent),
     enquiries: (enquiryResult.data as EnquiryRow[]).map(mapEnquiry),
   };
 }
@@ -158,27 +218,9 @@ export async function getPublishedStory(slug: string): Promise<Story | null> {
 }
 
 export async function createStory(
-  input: {
-    slug: string;
-    category: string;
-    title: string;
-    excerpt: string;
-    image: string;
-    alt: string;
-    readTime: string;
-    quote: string;
-    status: "draft" | "published";
-  },
+  input: StoryMutationInput,
   createdBy: string,
 ) {
-  const sections = [
-    {
-      heading: "The story",
-      paragraphs: [input.excerpt],
-      image: input.image,
-      imageAlt: input.alt,
-    },
-  ];
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("stories")
@@ -191,15 +233,38 @@ export async function createStory(
       hero_alt: input.alt,
       read_time: input.readTime,
       quote: input.quote,
-      body_json: sections,
+      body_json: input.sections,
       status: input.status,
       created_by: createdBy,
     })
-    .select("id")
+    .select("*")
     .single();
 
   if (error) throw error;
-  return Number(data.id);
+  return mapStory(data as StoryRow);
+}
+
+export async function updateStory(id: number, input: StoryMutationInput) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("stories")
+    .update({
+      slug: input.slug,
+      category: input.category,
+      title: input.title,
+      excerpt: input.excerpt,
+      hero_image: input.image,
+      hero_alt: input.alt,
+      read_time: input.readTime,
+      quote: input.quote,
+      body_json: input.sections,
+      status: input.status,
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return mapStory(data as StoryRow);
 }
 
 export async function updateStoryStatus(
@@ -211,6 +276,77 @@ export async function updateStoryStatus(
     .from("stories")
     .update({ status })
     .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteStory(id: number) {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("stories").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function getPublishedEvents(): Promise<DashboardEvent[]> {
+  const supabase = createSupabasePublicClient();
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("status", "published")
+    .or(`starts_at.gte.${now},ends_at.gte.${now}`)
+    .order("starts_at", { ascending: true });
+  if (error) throw error;
+  return (data as EventRow[]).map(mapEvent);
+}
+
+export async function createEvent(input: EventMutationInput, createdBy: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("events")
+    .insert({
+      slug: input.slug,
+      title: input.title,
+      summary: input.summary,
+      description: input.description,
+      location: input.location,
+      starts_at: input.startsAt,
+      ends_at: input.endsAt,
+      image_url: input.image,
+      image_alt: input.alt,
+      status: input.status,
+      created_by: createdBy,
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return mapEvent(data as EventRow);
+}
+
+export async function updateEvent(id: number, input: EventMutationInput) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("events")
+    .update({
+      slug: input.slug,
+      title: input.title,
+      summary: input.summary,
+      description: input.description,
+      location: input.location,
+      starts_at: input.startsAt,
+      ends_at: input.endsAt,
+      image_url: input.image,
+      image_alt: input.alt,
+      status: input.status,
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return mapEvent(data as EventRow);
+}
+
+export async function deleteEvent(id: number) {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("events").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -249,11 +385,18 @@ export async function updateEnquiryStatus(
   if (error) throw error;
 }
 
+export async function deleteEnquiry(id: number) {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("enquiries").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function getSiteImages(): Promise<SiteImage[]> {
   const supabase = await createSupabaseServerClient();
-  const [imageResult, storyResult] = await Promise.all([
+  const [imageResult, storyResult, eventResult] = await Promise.all([
     supabase.from("site_images").select("*"),
     supabase.from("stories").select("*").order("id"),
+    supabase.from("events").select("*").order("id"),
   ]);
 
   if (imageResult.error) throw imageResult.error;
@@ -265,6 +408,7 @@ export async function getSiteImages(): Promise<SiteImage[]> {
   const slots = [
     ...siteImageSlots,
     ...buildStoryImageSlots(storyResult.data as StoryRow[]),
+    ...(eventResult.error ? [] : buildEventImageSlots(eventResult.data as EventRow[])),
   ];
 
   return slots
@@ -329,17 +473,23 @@ export async function updateSiteImage(input: {
   return mapSiteImage(data as SiteImageRow);
 }
 
-export async function resetSiteImage(slot: SiteImageSlot) {
+export async function deleteSiteImageOverride(slot: SiteImageSlot) {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("site_images")
-    .update({ current_url: null, alt_text: "", updated_by: null })
-    .eq("key", slot.key)
-    .select("*")
-    .single();
+    .delete()
+    .eq("key", slot.key);
 
   if (error) throw error;
-  return mapSiteImage(data as SiteImageRow);
+  return {
+    key: slot.key,
+    label: slot.label,
+    group: slot.group,
+    defaultUrl: slot.defaultUrl,
+    currentUrl: null,
+    altText: "",
+    updatedAt: "",
+  } satisfies SiteImage;
 }
 
 export async function getDashboardLeadershipProfiles() {
@@ -393,6 +543,15 @@ export async function updateLeadershipProfile(input: {
   return mapLeadershipProfile(data as LeadershipProfileRow);
 }
 
+export async function deleteLeadershipProfile(slug: string) {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("leadership_profiles")
+    .delete()
+    .eq("slug", slug);
+  if (error) throw error;
+}
+
 function mapStory(row: StoryRow): DashboardStory {
   return {
     id: row.id,
@@ -423,6 +582,25 @@ function mapEnquiry(row: EnquiryRow): Enquiry {
     yearGroup: row.year_group,
     message: row.message,
     status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapEvent(row: EventRow): DashboardEvent {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    summary: row.summary,
+    description: row.description,
+    location: row.location,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    image: row.image_url,
+    alt: row.image_alt,
+    status: row.status,
+    createdBy: row.created_by ?? "website-admin",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -491,6 +669,15 @@ function buildStoryImageSlots(rows: StoryRow[]): SiteImageSlot[] {
     });
     return placements;
   });
+}
+
+function buildEventImageSlots(rows: EventRow[]): SiteImageSlot[] {
+  return rows.map((row) => ({
+    key: `event.${row.slug}.image`,
+    label: `Upcoming event — ${row.title}`,
+    group: "Events",
+    defaultUrl: row.image_url,
+  }));
 }
 
 function parseSections(value: unknown): Story["sections"] {

@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 
 const emptySnapshot: DashboardSnapshot = {
   stories: [],
+  events: [],
   enquiries: [],
 };
 

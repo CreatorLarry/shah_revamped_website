@@ -13,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/admissions",
     "/school-life",
     "/stories",
+    "/events",
     "/gallery",
     "/contact",
   ];
