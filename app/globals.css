@@ -64,6 +64,11 @@ input {
   color: var(--school-ink);
 }
 
+.privacy-gate::backdrop {
+  background: rgb(6 47 95 / 92%);
+  backdrop-filter: blur(6px);
+}
+
 .hero-reveal {
   animation: hero-rise 760ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
 }
