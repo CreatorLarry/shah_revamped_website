@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
-import { ArrowUpRight, Clock3 } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Clock3 } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -97,6 +97,12 @@ export default async function StoriesPage() {
                           <Clock3 aria-hidden="true" className="size-4" />
                           {story.readTime}
                         </span>
+                        {story.publishedAt ? (
+                          <span className="flex items-center gap-2 text-school-muted">
+                            <CalendarDays aria-hidden="true" className="size-4" />
+                            {formatPublishedDate(story.publishedAt)}
+                          </span>
+                        ) : null}
                       </div>
                       <div className="mt-5 flex items-start justify-between gap-5">
                         <h2 className="font-serif text-3xl leading-[1.02] tracking-[-0.03em] text-school-ink sm:text-4xl">
@@ -127,4 +133,13 @@ export default async function StoriesPage() {
       <Footer />
     </>
   );
+}
+
+function formatPublishedDate(value: string) {
+  return new Intl.DateTimeFormat("en-KE", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Africa/Nairobi",
+  }).format(new Date(value));
 }

@@ -192,6 +192,9 @@ export function Footer() {
             <Link href="/contact" className="transition-colors hover:text-white">
               Contact us
             </Link>
+            <Link href="/privacy" className="transition-colors hover:text-white">
+              Privacy
+            </Link>
             <Link href="/dashboard" className="transition-colors hover:text-white">
               Staff dashboard
             </Link>

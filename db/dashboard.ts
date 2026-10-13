@@ -1,5 +1,12 @@
 import type { Story } from "@/data/stories";
+import {
+  editablePageDefinitions,
+  getEditablePageDefinition,
+  type DashboardEditablePage,
+  type EditablePageKey,
+} from "@/data/editable-pages";
 import { siteImageSlots, type SiteImageSlot } from "@/data/site-images";
+import { parseEditablePageContent } from "@/lib/editable-page-content";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -46,6 +53,7 @@ export type StoryMutationInput = Pick<
   | "slug"
   | "category"
   | "title"
+  | "publishedAt"
   | "excerpt"
   | "image"
   | "alt"
@@ -94,6 +102,7 @@ type StoryRow = {
   slug: string;
   category: string;
   title: string;
+  published_at: string | null;
   excerpt: string;
   hero_image: string;
   hero_alt: string;
@@ -160,6 +169,12 @@ type LeadershipProfileRow = {
   updated_at: string;
 };
 
+type EditablePageRow = {
+  key: EditablePageKey;
+  content: unknown;
+  updated_at: string;
+};
+
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
   const supabase = await createSupabaseServerClient();
   const [storyResult, eventResult, enquiryResult] = await Promise.all([
@@ -197,6 +212,7 @@ export async function getPublishedStories(): Promise<Story[]> {
     .from("stories")
     .select("*")
     .eq("status", "published")
+    .order("published_at", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false })
     .order("id", { ascending: false });
 
@@ -228,6 +244,7 @@ export async function createStory(
       slug: input.slug,
       category: input.category,
       title: input.title,
+      published_at: input.publishedAt,
       excerpt: input.excerpt,
       hero_image: input.image,
       hero_alt: input.alt,
@@ -252,6 +269,7 @@ export async function updateStory(id: number, input: StoryMutationInput) {
       slug: input.slug,
       category: input.category,
       title: input.title,
+      published_at: input.publishedAt,
       excerpt: input.excerpt,
       hero_image: input.image,
       hero_alt: input.alt,
@@ -274,7 +292,10 @@ export async function updateStoryStatus(
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("stories")
-    .update({ status })
+    .update({
+      status,
+      ...(status === "published" ? { published_at: new Date().toISOString() } : {}),
+    })
     .eq("id", id);
   if (error) throw error;
 }
@@ -552,6 +573,72 @@ export async function deleteLeadershipProfile(slug: string) {
   if (error) throw error;
 }
 
+export async function getDashboardEditablePages(): Promise<DashboardEditablePage[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from("editable_pages").select("*");
+  if (error) throw error;
+
+  const rows = new Map(
+    (data as EditablePageRow[]).map((row) => [row.key, row]),
+  );
+  return editablePageDefinitions.map((definition) => {
+    const row = rows.get(definition.key);
+    const parsed = row
+      ? parseEditablePageContent(definition.key, row.content)
+      : null;
+    return {
+      ...definition,
+      content: parsed ?? definition.content,
+      updatedAt: row?.updated_at ?? "",
+    } as DashboardEditablePage;
+  });
+}
+
+export async function getPublicEditablePage(key: EditablePageKey) {
+  const definition = getEditablePageDefinition(key);
+  if (!definition) throw new Error("Unknown editable page.");
+  const supabase = createSupabasePublicClient();
+  const { data, error } = await supabase
+    .from("editable_pages")
+    .select("key, content, updated_at")
+    .eq("key", key)
+    .maybeSingle();
+  if (error) throw error;
+  const row = data as EditablePageRow | null;
+  return row
+    ? parseEditablePageContent(key, row.content) ?? definition.content
+    : definition.content;
+}
+
+export async function updateEditablePage(input: {
+  key: EditablePageKey;
+  content: DashboardEditablePage["content"];
+  updatedBy: string;
+}) {
+  const definition = getEditablePageDefinition(input.key);
+  if (!definition) throw new Error("Unknown editable page.");
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("editable_pages")
+    .upsert(
+      {
+        key: input.key,
+        content: input.content,
+        updated_by: input.updatedBy,
+      },
+      { onConflict: "key" },
+    )
+    .select("key, content, updated_at")
+    .single();
+  if (error) throw error;
+  const row = data as EditablePageRow;
+  return {
+    ...definition,
+    content: parseEditablePageContent(input.key, row.content) ?? input.content,
+    updatedAt: row.updated_at,
+  } as DashboardEditablePage;
+}
+
 function mapStory(row: StoryRow): DashboardStory {
   return {
     id: row.id,
@@ -559,6 +646,7 @@ function mapStory(row: StoryRow): DashboardStory {
     href: `/stories/${row.slug}`,
     category: row.category,
     title: row.title,
+    publishedAt: row.published_at ?? undefined,
     excerpt: row.excerpt,
     image: row.hero_image,
     alt: row.hero_alt,

@@ -16,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/events",
     "/gallery",
     "/contact",
+    "/privacy",
   ];
   const detailRoutes = Object.values(contentPages).map((page) => page.route);
   const storyRoutes = stories.map((story) => `/stories/${story.slug}`);

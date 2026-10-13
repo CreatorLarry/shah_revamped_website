@@ -1,6 +1,6 @@
 import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
-import { ArrowLeft, Clock3 } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock3 } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -42,6 +42,12 @@ export function StoryArticle({ story }: StoryArticleProps) {
                 <Clock3 aria-hidden="true" className="size-4" />
                 {story.readTime}
               </span>
+              {story.publishedAt ? (
+                <span className="flex items-center gap-2 text-white/62">
+                  <CalendarDays aria-hidden="true" className="size-4" />
+                  {formatPublishedDate(story.publishedAt)}
+                </span>
+              ) : null}
             </div>
             <h1 className="mt-6 max-w-[980px] font-serif text-[clamp(3.5rem,8vw,7.7rem)] leading-[0.88] tracking-[-0.055em]">
               {story.title}
@@ -148,4 +154,13 @@ export function StoryArticle({ story }: StoryArticleProps) {
       <Footer />
     </>
   );
+}
+
+function formatPublishedDate(value: string) {
+  return new Intl.DateTimeFormat("en-KE", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Africa/Nairobi",
+  }).format(new Date(value));
 }

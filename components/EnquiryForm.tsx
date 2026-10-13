@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { CheckCircle2, Send } from "lucide-react";
 
 type FormStatus =
@@ -137,6 +138,18 @@ export function EnquiryForm() {
           {status.message}
         </p>
       ) : null}
+
+      <p className="text-xs leading-6 text-school-muted">
+        We use these details only to respond to your enquiry and support the
+        admissions process. Read our{" "}
+        <Link
+          href="/privacy"
+          className="font-semibold text-school-red underline underline-offset-4"
+        >
+          privacy notice
+        </Link>
+        .
+      </p>
 
       <button
         type="submit"

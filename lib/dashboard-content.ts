@@ -6,6 +6,7 @@ import type { StorySection } from "@/data/stories";
 
 export function parseStoryInput(payload: Record<string, unknown>): StoryMutationInput | null {
   const title = clean(payload.title, 140);
+  const publishedAt = payload.publishedAt ? parseDate(payload.publishedAt) : null;
   const slug = clean(payload.slug, 140).toLowerCase();
   const category = clean(payload.category, 80);
   const excerpt = clean(payload.excerpt, 500);
@@ -35,6 +36,7 @@ export function parseStoryInput(payload: Record<string, unknown>): StoryMutation
 
   return {
     title,
+    publishedAt: publishedAt ?? undefined,
     slug,
     category,
     excerpt,

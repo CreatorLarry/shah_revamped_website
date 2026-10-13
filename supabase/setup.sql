@@ -7,6 +7,7 @@ create table if not exists public.stories (
   slug text not null unique check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
   category text not null check (char_length(category) between 1 and 80),
   title text not null check (char_length(title) between 1 and 140),
+  published_at timestamptz,
   excerpt text not null check (char_length(excerpt) between 1 and 500),
   hero_image text not null check (char_length(hero_image) between 1 and 500),
   hero_alt text not null check (char_length(hero_alt) between 1 and 220),

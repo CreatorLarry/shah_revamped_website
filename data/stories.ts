@@ -10,6 +10,7 @@ export type Story = {
   href: string;
   category: string;
   title: string;
+  publishedAt?: string;
   excerpt: string;
   image: string;
   alt: string;
@@ -24,6 +25,7 @@ export const stories: readonly Story[] = [
     href: "/stories/learning-through-discovery",
     category: "Early Years",
     title: "Learning Through Discovery",
+    publishedAt: "2026-10-13T09:00:00+03:00",
     excerpt:
       "How purposeful, hands-on experiences help young learners build language, confidence and curiosity from the very beginning.",
     image: "/images/school/early-years-fruit-learning.webp",
@@ -68,6 +70,7 @@ export const stories: readonly Story[] = [
     href: "/stories/confidence-to-compete",
     category: "Sport",
     title: "Confidence to Compete",
+    publishedAt: "2026-10-13T09:00:00+03:00",
     excerpt:
       "Sport gives learners a practical language for discipline, teamwork, resilience and the courage to keep improving.",
     image: "/images/school/swimming-competition.webp",
@@ -112,6 +115,7 @@ export const stories: readonly Story[] = [
     href: "/stories/learning-beyond-the-classroom",
     category: "School Life",
     title: "Learning Beyond the Classroom",
+    publishedAt: "2026-10-13T09:00:00+03:00",
     excerpt:
       "Visits, creative projects and shared experiences help learners connect knowledge with the wider world.",
     image: "/images/school/museum-learning-trip.webp",

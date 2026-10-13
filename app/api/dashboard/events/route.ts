@@ -1,6 +1,7 @@
 import { createEvent, getDashboardSnapshot } from "@/db/dashboard";
 import { parseEventInput } from "@/lib/dashboard-content";
 import { requireDashboardApiUser } from "@/lib/dashboard-auth";
+import { resolveDashboardImage } from "@/lib/dashboard-storage";
 
 export async function GET() {
   const access = await requireDashboardApiUser();
@@ -19,7 +20,16 @@ export async function POST(request: Request) {
   const access = await requireDashboardApiUser();
   if (access.error || !access.user) return access.error;
   try {
-    const input = parseEventInput((await request.json()) as Record<string, unknown>);
+    const payload = (await request.json()) as Record<string, unknown>;
+    const objectPath = String(payload.imageObjectPath ?? "");
+    if (objectPath) {
+      const publicUrl = await resolveDashboardImage(objectPath, "events");
+      if (!publicUrl) {
+        return Response.json({ error: "The uploaded event image could not be verified." }, { status: 400 });
+      }
+      payload.image = publicUrl;
+    }
+    const input = parseEventInput(payload);
     if (!input) {
       return Response.json(
         { error: "Please complete the required event fields correctly." },

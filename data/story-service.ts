@@ -14,7 +14,7 @@ export async function getPublicStories(): Promise<Story[]> {
 
 export async function getPublicStory(slug: string): Promise<Story | undefined> {
   try {
-    return (await getPublishedStory(slug)) ?? undefined;
+    return (await getPublishedStory(slug)) ?? getStory(slug);
   } catch {
     // The bundled stories keep the public website available before database setup.
     return getStory(slug);

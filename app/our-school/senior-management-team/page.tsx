@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, BadgeCheck, Clock3 } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -77,9 +77,9 @@ export default async function SeniorManagementTeamPage() {
                 future-ready academy.
               </p>
               <p>
-                Confirmed leaders are named below. Operational roles whose
-                names or portraits are still being assembled are included in
-                the structure and clearly marked for completion before launch.
+                The structure includes academic and operational roles so
+                families can see how leadership responsibilities connect
+                across the academy.
               </p>
             </div>
           </div>
@@ -104,8 +104,6 @@ export default async function SeniorManagementTeamPage() {
                       .join("")
                       .slice(0, 2)
                       .toUpperCase();
-                const StatusIcon = member.confirmed ? BadgeCheck : Clock3;
-
                 return (
                   <article
                     key={member.slug}
@@ -150,16 +148,6 @@ export default async function SeniorManagementTeamPage() {
                       </p>
                       <p className="mt-5 text-sm leading-7 text-school-muted">
                         {member.description}
-                      </p>
-                      <p
-                        className={`mt-6 flex items-center gap-2 text-[0.62rem] font-bold uppercase tracking-[0.13em] ${
-                          member.confirmed ? "text-school-navy" : "text-school-muted"
-                        }`}
-                      >
-                        <StatusIcon aria-hidden="true" className="size-4" />
-                        {member.confirmed
-                          ? "Profile confirmed"
-                          : "Profile details pending"}
                       </p>
                     </div>
                   </article>

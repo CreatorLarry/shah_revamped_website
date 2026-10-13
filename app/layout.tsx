@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { headers } from "next/headers";
+import { PrivacyNotice } from "@/components/PrivacyNotice";
 import { getSiteOrigin } from "@/lib/site-origin";
 import "./globals.css";
 
@@ -89,7 +90,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} antialiased`}>{children}</body>
+      <body className={`${geistSans.variable} antialiased`}>
+        {children}
+        <PrivacyNotice />
+      </body>
     </html>
   );
 }

@@ -1,6 +1,7 @@
 import { deleteEvent, updateEvent } from "@/db/dashboard";
 import { parseEventInput } from "@/lib/dashboard-content";
 import { requireDashboardApiUser } from "@/lib/dashboard-auth";
+import { resolveDashboardImage } from "@/lib/dashboard-storage";
 
 export async function PATCH(
   request: Request,
@@ -10,7 +11,16 @@ export async function PATCH(
   if (access.error) return access.error;
   const { id: rawId } = await context.params;
   const id = Number(rawId);
-  const input = parseEventInput((await request.json()) as Record<string, unknown>);
+  const payload = (await request.json()) as Record<string, unknown>;
+  const objectPath = String(payload.imageObjectPath ?? "");
+  if (objectPath) {
+    const publicUrl = await resolveDashboardImage(objectPath, "events");
+    if (!publicUrl) {
+      return Response.json({ error: "The uploaded event image could not be verified." }, { status: 400 });
+    }
+    payload.image = publicUrl;
+  }
+  const input = parseEventInput(payload);
   if (!Number.isInteger(id) || id < 1 || !input) {
     return Response.json({ error: "Invalid event update." }, { status: 400 });
   }

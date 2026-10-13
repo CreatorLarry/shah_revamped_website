@@ -7,7 +7,7 @@ type InteriorHeroProps = {
   title: ReactNode;
   description: string;
   image: string;
-  imageKey: string;
+  imageKey?: string;
   imageAlt: string;
   imagePosition?: string;
 };

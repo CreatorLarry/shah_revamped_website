@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   CircleAlert,
   Clock3,
+  FileText,
   FilePlus2,
   Inbox,
   Images,
@@ -38,6 +39,7 @@ import type {
   SiteImage,
 } from "@/db/dashboard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { DashboardPagesPanel } from "@/components/DashboardPagesPanel";
 
 type DashboardSection =
   | "overview"
@@ -45,6 +47,7 @@ type DashboardSection =
   | "events"
   | "media"
   | "leadership"
+  | "pages"
   | "enquiries";
 
 type DashboardAppProps = {
@@ -61,6 +64,7 @@ const navigation = [
   { id: "events", label: "Events", Icon: CalendarDays },
   { id: "media", label: "Media", Icon: Images },
   { id: "leadership", label: "Leadership", Icon: UsersRound },
+  { id: "pages", label: "Pages", Icon: FileText },
   { id: "enquiries", label: "Enquiries", Icon: Inbox },
 ] as const;
 
@@ -80,7 +84,7 @@ const dashboardImageExtensions: Record<string, string> = {
 
 async function uploadDashboardImage(
   file: File,
-  folder: "replacements" | "leadership",
+  folder: "replacements" | "leadership" | "events",
   stem: string,
 ) {
   const extension = dashboardImageExtensions[file.type];
@@ -434,6 +438,10 @@ export function DashboardApp({
               onProfilesChange={setLeadership}
               onNotice={setNotice}
             />
+          ) : null}
+
+          {section === "pages" ? (
+            <DashboardPagesPanel onNotice={setNotice} />
           ) : null}
         </main>
       </div>
@@ -807,7 +815,7 @@ function StoriesPanel({
                     {story.title}
                   </h3>
                   <p className="mt-2 text-xs text-school-muted">
-                    Updated {formatDate(story.updatedAt)}
+                    Published {formatDate(story.publishedAt ?? story.createdAt)}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 sm:flex-col sm:items-stretch">
@@ -867,6 +875,7 @@ function StoriesPanel({
 
 type StoryEditorPayload = {
   title: string;
+  publishedAt: string;
   slug: string;
   category: string;
   readTime: string;
@@ -912,6 +921,7 @@ function StoryCreateForm({
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
     onSubmit({
       title: String(values.title ?? ""),
+      publishedAt: new Date(String(values.publishedAt ?? "")).toISOString(),
       slug: String(values.slug ?? ""),
       category: String(values.category ?? ""),
       readTime: String(values.readTime ?? ""),
@@ -983,6 +993,15 @@ function StoryCreateForm({
             name="category"
             defaultValue={story?.category}
             placeholder="School Life"
+            required
+          />
+        </DashboardField>
+        <DashboardField label="Published date">
+          <input
+            className={inputClass}
+            type="datetime-local"
+            name="publishedAt"
+            defaultValue={toLocalDateTime(story?.publishedAt ?? new Date().toISOString())}
             required
           />
         </DashboardField>
@@ -1116,6 +1135,7 @@ type EventEditorPayload = {
   image: string;
   alt: string;
   status: "draft" | "published";
+  imageFile: File | null;
 };
 
 function EventsPanel({
@@ -1133,13 +1153,21 @@ function EventsPanel({
 
   async function saveEvent(values: EventEditorPayload) {
     setSaving(true);
+    let uploadedPath = "";
     try {
+      const { imageFile, ...eventValues } = values;
+      if (imageFile) {
+        uploadedPath = await uploadDashboardImage(imageFile, "events", values.slug);
+      }
       const response = await fetch(
         editingEvent ? `/api/dashboard/events/${editingEvent.id}` : "/api/dashboard/events",
         {
           method: editingEvent ? "PATCH" : "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify(values),
+          body: JSON.stringify({
+            ...eventValues,
+            imageObjectPath: uploadedPath || null,
+          }),
         },
       );
       const result = (await response.json()) as { event?: DashboardEvent; error?: string };
@@ -1153,6 +1181,7 @@ function EventsPanel({
       setEditingEvent(null);
       onNotice(editingEvent ? "The event changes are now live." : "The upcoming event has been created.");
     } catch (error) {
+      await removeDashboardUpload(uploadedPath);
       onNotice(error instanceof Error ? error.message : "The event could not be saved.");
     } finally {
       setSaving(false);
@@ -1259,6 +1288,7 @@ function EventEditor({ event, saving, onSubmit, onCancel }: {
   function submit(eventForm: FormEvent<HTMLFormElement>) {
     eventForm.preventDefault();
     const values = Object.fromEntries(new FormData(eventForm.currentTarget).entries());
+    const imageFile = values.imageFile;
     const startsAt = new Date(String(values.startsAt)).toISOString();
     const endsValue = String(values.endsAt ?? "");
     onSubmit({
@@ -1272,6 +1302,7 @@ function EventEditor({ event, saving, onSubmit, onCancel }: {
       image: String(values.image ?? ""),
       alt: String(values.alt ?? ""),
       status: values.status === "published" ? "published" : "draft",
+      imageFile: imageFile instanceof File && imageFile.size > 0 ? imageFile : null,
     });
   }
 
@@ -1285,7 +1316,17 @@ function EventEditor({ event, saving, onSubmit, onCancel }: {
         <DashboardField label="Starts"><input className={inputClass} type="datetime-local" name="startsAt" defaultValue={toLocalDateTime(event?.startsAt)} required /></DashboardField>
         <DashboardField label="Ends (optional)"><input className={inputClass} type="datetime-local" name="endsAt" defaultValue={toLocalDateTime(event?.endsAt)} /></DashboardField>
         <DashboardField label="Location"><input className={inputClass} name="location" defaultValue={event?.location} required /></DashboardField>
-        <DashboardField label="Image path"><input className={inputClass} name="image" defaultValue={event?.image ?? "/images/school/campus-assembly.webp"} required /></DashboardField>
+        <DashboardField label={event ? "Replace event image" : "Event image"}>
+          <input
+            className="block w-full text-xs font-normal normal-case tracking-normal text-white/70 file:mr-3 file:border-0 file:bg-white file:px-4 file:py-3 file:text-[0.62rem] file:font-bold file:uppercase file:tracking-[0.1em] file:text-school-navy"
+            type="file"
+            name="imageFile"
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            required={!event}
+          />
+          <input type="hidden" name="image" value={event?.image ?? ""} />
+          {event ? <p className="mt-2 text-xs font-normal normal-case tracking-normal text-white/55">Leave empty to keep the current image.</p> : null}
+        </DashboardField>
         <div className="md:col-span-2"><DashboardField label="Image description"><input className={inputClass} name="alt" defaultValue={event?.alt} required /></DashboardField></div>
         <div className="md:col-span-2"><DashboardField label="Short summary"><textarea className={`${inputClass} min-h-24 resize-y`} name="summary" defaultValue={event?.summary} required /></DashboardField></div>
         <div className="md:col-span-2"><DashboardField label="Full details"><textarea className={`${inputClass} min-h-36 resize-y`} name="description" defaultValue={event?.description} required /></DashboardField></div>
