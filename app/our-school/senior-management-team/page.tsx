@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
 import { ArrowUpRight, BadgeCheck, Clock3 } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
@@ -114,20 +113,21 @@ export default async function SeniorManagementTeamPage() {
                       member.confirmed ? "bg-white" : "bg-school-cream/60"
                     }`}
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden bg-school-navy">
+                    <div className="relative aspect-square overflow-hidden bg-white">
                       {member.photoUrl ? (
-                        <Image
+                        // Contain the complete upload inside an equal card frame.
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                           src={member.photoUrl}
                           alt={member.photoAlt || `${member.name}, ${member.role}`}
-                          fill
-                          unoptimized
-                          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                          className="object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          className="absolute inset-0 h-full w-full object-contain"
                         />
                       ) : (
                         <span
                           aria-hidden="true"
-                          className="flex h-full items-center justify-center font-serif text-6xl text-white/85"
+                          className="flex h-full items-center justify-center bg-school-navy font-serif text-6xl text-white/85"
                         >
                           {initials}
                         </span>

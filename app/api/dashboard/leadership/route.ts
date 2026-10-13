@@ -6,14 +6,6 @@ import {
 import { requireDashboardApiUser } from "@/lib/dashboard-auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-const allowedTypes = new Map([
-  ["image/jpeg", "jpg"],
-  ["image/png", "png"],
-  ["image/webp", "webp"],
-  ["image/avif", "avif"],
-]);
-
 export async function GET() {
   const access = await requireDashboardApiUser();
   if (access.error) return access.error;
@@ -55,19 +47,19 @@ export async function POST(request: Request) {
   if (access.error) return access.error;
 
   try {
-    const formData = await request.formData();
-    const slug = String(formData.get("slug") ?? "");
+    const payload = (await request.json()) as Record<string, unknown>;
+    const slug = String(payload.slug ?? "");
     const profiles = await getDashboardLeadershipProfiles();
     const current = profiles.find((profile) => profile.slug === slug);
     if (!current) {
       return Response.json({ error: "Unknown leadership profile." }, { status: 400 });
     }
 
-    const name = field(formData, "name", 120);
-    const role = field(formData, "role", 120);
-    const area = field(formData, "area", 80);
-    const description = field(formData, "description", 600);
-    const photoAlt = field(formData, "photoAlt", 220, false);
+    const name = field(payload, "name", 120);
+    const role = field(payload, "role", 120);
+    const area = field(payload, "area", 80);
+    const description = field(payload, "description", 600);
+    const photoAlt = field(payload, "photoAlt", 220, false);
     if (!name || !role || !area || !description) {
       return Response.json(
         { error: "Name, role, leadership area and biography are required." },
@@ -76,32 +68,21 @@ export async function POST(request: Request) {
     }
 
     let photoUrl = current.photoUrl;
-    const file = formData.get("file");
-    if (file instanceof File && file.size > 0) {
-      const extension = allowedTypes.get(file.type);
-      if (!extension) {
+    const objectPath = String(payload.photoObjectPath ?? "");
+    if (objectPath) {
+      if (!isValidLeadershipPath(objectPath)) {
         return Response.json(
-          { error: "Choose a JPG, PNG, WebP or AVIF portrait." },
+          { error: "The uploaded leadership portrait is invalid." },
           { status: 400 },
         );
       }
-      if (file.size > MAX_IMAGE_SIZE) {
-        return Response.json(
-          { error: "Portraits must be 10 MB or smaller." },
-          { status: 400 },
-        );
-      }
-
-      const objectPath = `leadership/${slug}-${Date.now()}.${extension}`;
       const supabase = await createSupabaseServerClient();
-      const { error: uploadError } = await supabase.storage
-        .from("site-images")
-        .upload(objectPath, await file.arrayBuffer(), {
-          contentType: file.type,
-          cacheControl: "31536000",
-          upsert: false,
-        });
-      if (uploadError) throw uploadError;
+      if (!(await storedObjectExists(supabase, objectPath))) {
+        return Response.json(
+          { error: "The uploaded leadership portrait could not be found." },
+          { status: 400 },
+        );
+      }
       photoUrl = supabase.storage.from("site-images").getPublicUrl(objectPath).data.publicUrl;
     }
 
@@ -113,7 +94,7 @@ export async function POST(request: Request) {
       description,
       photoUrl,
       photoAlt,
-      confirmed: formData.get("confirmed") === "on",
+      confirmed: payload.confirmed === true,
     });
     return Response.json({ profile });
   } catch {
@@ -125,11 +106,29 @@ export async function POST(request: Request) {
 }
 
 function field(
-  formData: FormData,
+  payload: Record<string, unknown>,
   name: string,
   maxLength: number,
   required = true,
 ) {
-  const value = String(formData.get(name) ?? "").trim().slice(0, maxLength);
+  const value = String(payload[name] ?? "").trim().slice(0, maxLength);
   return required || value ? value : "";
+}
+
+function isValidLeadershipPath(path: string) {
+  return /^leadership\/[a-z0-9][a-z0-9_-]*[.](?:jpe?g|png|webp|avif)$/i.test(path);
+}
+
+async function storedObjectExists(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  objectPath: string,
+) {
+  const separator = objectPath.lastIndexOf("/");
+  const folder = objectPath.slice(0, separator);
+  const fileName = objectPath.slice(separator + 1);
+  const { data, error } = await supabase.storage
+    .from("site-images")
+    .list(folder, { limit: 10, search: fileName });
+
+  return !error && data?.some((file) => file.name === fileName) === true;
 }

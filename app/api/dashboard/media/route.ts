@@ -6,14 +6,6 @@ import {
 import { requireDashboardApiUser } from "@/lib/dashboard-auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-const allowedTypes = new Map([
-  ["image/jpeg", "jpg"],
-  ["image/png", "png"],
-  ["image/webp", "webp"],
-  ["image/avif", "avif"],
-]);
-
 export async function GET() {
   const access = await requireDashboardApiUser();
   if (access.error) return access.error;
@@ -33,45 +25,33 @@ export async function POST(request: Request) {
   if (access.error || !access.user) return access.error;
 
   try {
-    const formData = await request.formData();
-    const key = String(formData.get("key") ?? "");
-    const altText = String(formData.get("altText") ?? "").trim().slice(0, 220);
-    const file = formData.get("file");
-    const extension = file instanceof File ? allowedTypes.get(file.type) : null;
+    const payload = (await request.json()) as {
+      key?: string;
+      altText?: string;
+      objectPath?: string;
+    };
+    const key = String(payload.key ?? "");
+    const altText = String(payload.altText ?? "").trim().slice(0, 220);
+    const objectPath = String(payload.objectPath ?? "");
     const slot = (await getSiteImages()).find((image) => image.key === key);
 
     if (!slot) {
       return Response.json({ error: "Unknown website image slot." }, { status: 400 });
     }
-    if (!(file instanceof File) || !extension || file.size < 1) {
+    if (!isValidUploadedPath(objectPath, "replacements")) {
       return Response.json(
-        { error: "Choose a JPG, PNG, WebP or AVIF image." },
+        { error: "The uploaded replacement file is invalid." },
         { status: 400 },
       );
     }
-    if (file.size > MAX_IMAGE_SIZE) {
-      return Response.json(
-        { error: "Images must be 10 MB or smaller." },
-        { status: 400 },
-      );
-    }
-
-    const safeName = key
-      .replace(/^\/images\//, "")
-      .replace(/\.[^.]+$/, "")
-      .replace(/[^a-z0-9/-]+/gi, "-")
-      .replace(/\/+/, "/");
-    const objectPath = `replacements/${safeName}-${Date.now()}.${extension}`;
     const supabase = await createSupabaseServerClient();
-    const { error: uploadError } = await supabase.storage
-      .from("site-images")
-      .upload(objectPath, await file.arrayBuffer(), {
-        contentType: file.type,
-        cacheControl: "31536000",
-        upsert: false,
-      });
+    if (!(await storedObjectExists(supabase, objectPath))) {
+      return Response.json(
+        { error: "The uploaded replacement file could not be found." },
+        { status: 400 },
+      );
+    }
 
-    if (uploadError) throw uploadError;
     const { data } = supabase.storage.from("site-images").getPublicUrl(objectPath);
     const image = await updateSiteImage({
       slot,
@@ -120,6 +100,27 @@ export async function DELETE(request: Request) {
       { status: 500 },
     );
   }
+}
+
+function isValidUploadedPath(path: string, folder: "replacements" | "leadership") {
+  return new RegExp(
+    `^${folder}/[a-z0-9][a-z0-9_-]*[.](?:jpe?g|png|webp|avif)$`,
+    "i",
+  ).test(path);
+}
+
+async function storedObjectExists(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  objectPath: string,
+) {
+  const separator = objectPath.lastIndexOf("/");
+  const folder = objectPath.slice(0, separator);
+  const fileName = objectPath.slice(separator + 1);
+  const { data, error } = await supabase.storage
+    .from("site-images")
+    .list(folder, { limit: 10, search: fileName });
+
+  return !error && data?.some((file) => file.name === fileName) === true;
 }
 
 async function removeStoredImage(

@@ -37,6 +37,7 @@ import type {
   LeadershipProfile,
   SiteImage,
 } from "@/db/dashboard";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type DashboardSection =
   | "overview"
@@ -68,6 +69,63 @@ const enquiryStatuses = [
   { value: "in_progress", label: "Following up" },
   { value: "closed", label: "Closed" },
 ] as const;
+
+const MAX_DASHBOARD_IMAGE_SIZE = 10 * 1024 * 1024;
+const dashboardImageExtensions: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/avif": "avif",
+};
+
+async function uploadDashboardImage(
+  file: File,
+  folder: "replacements" | "leadership",
+  stem: string,
+) {
+  const extension = dashboardImageExtensions[file.type];
+  if (!extension || file.size < 1) {
+    throw new Error("Choose a JPG, PNG, WebP or AVIF image.");
+  }
+  if (file.size > MAX_DASHBOARD_IMAGE_SIZE) {
+    throw new Error("Images must be 10 MB or smaller.");
+  }
+
+  const safeStem = stem
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "image";
+  const objectPath = `${folder}/${safeStem}-${Date.now()}-${crypto.randomUUID()}.${extension}`;
+  const supabase = createSupabaseBrowserClient();
+  const { error } = await supabase.storage.from("site-images").upload(objectPath, file, {
+    contentType: file.type,
+    cacheControl: "31536000",
+    upsert: false,
+  });
+
+  if (error) throw new Error(error.message || "The image upload failed.");
+  return objectPath;
+}
+
+async function removeDashboardUpload(objectPath: string) {
+  if (!objectPath) return;
+  await createSupabaseBrowserClient().storage.from("site-images").remove([objectPath]);
+}
+
+async function readApiResult<T extends object>(response: Response): Promise<T> {
+  const text = await response.text();
+  if (!text) return {} as T;
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(
+      response.status === 413
+        ? "This image is too large for the website upload route."
+        : "The server returned an unexpected response. Please try again.",
+    );
+  }
+}
 
 export function DashboardApp({
   displayName,
@@ -1266,18 +1324,29 @@ function MediaPanel({
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
-    formData.set("key", image.key);
+    const file = formData.get("file");
+    const altText = String(formData.get("altText") ?? "");
+    let uploadedPath = "";
     setSavingKey(image.key);
 
     try {
+      if (!(file instanceof File)) {
+        throw new Error("Choose an image to upload.");
+      }
+      uploadedPath = await uploadDashboardImage(file, "replacements", image.key);
       const response = await fetch("/api/dashboard/media", {
         method: "POST",
-        body: formData,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          key: image.key,
+          altText,
+          objectPath: uploadedPath,
+        }),
       });
-      const result = (await response.json()) as {
+      const result = await readApiResult<{
         image?: SiteImage;
         error?: string;
-      };
+      }>(response);
       if (!response.ok || !result.image) {
         throw new Error(result.error || "The replacement could not be saved.");
       }
@@ -1288,8 +1357,10 @@ function MediaPanel({
         ),
       );
       refreshManagedImageRegistry();
+      form.reset();
       onNotice(`${image.label} has been updated across the website.`);
     } catch (error) {
+      await removeDashboardUpload(uploadedPath);
       onNotice(
         error instanceof Error
           ? error.message
@@ -1490,16 +1561,32 @@ function LeadershipPanel({
     profile: LeadershipProfile,
   ) {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const file = formData.get("file");
+    let uploadedPath = "";
     setSavingSlug(profile.slug);
     try {
+      if (file instanceof File && file.size > 0) {
+        uploadedPath = await uploadDashboardImage(file, "leadership", profile.slug);
+      }
       const response = await fetch("/api/dashboard/leadership", {
         method: "POST",
-        body: new FormData(event.currentTarget),
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          slug: profile.slug,
+          name: String(formData.get("name") ?? ""),
+          role: String(formData.get("role") ?? ""),
+          area: String(formData.get("area") ?? ""),
+          description: String(formData.get("description") ?? ""),
+          photoAlt: String(formData.get("photoAlt") ?? ""),
+          confirmed: formData.get("confirmed") === "on",
+          photoObjectPath: uploadedPath || null,
+        }),
       });
-      const result = (await response.json()) as {
+      const result = await readApiResult<{
         profile?: LeadershipProfile;
         error?: string;
-      };
+      }>(response);
       if (!response.ok || !result.profile) {
         throw new Error(result.error || "The leadership profile could not be saved.");
       }
@@ -1510,6 +1597,7 @@ function LeadershipPanel({
       );
       onNotice(`${result.profile.name}'s leadership profile has been updated.`);
     } catch (error) {
+      await removeDashboardUpload(uploadedPath);
       onNotice(
         error instanceof Error
           ? error.message
@@ -1573,18 +1661,19 @@ function LeadershipPanel({
               >
                 <input type="hidden" name="slug" value={profile.slug} />
                 <div className="grid sm:grid-cols-[180px_minmax(0,1fr)]">
-                  <div className="relative min-h-52 bg-school-navy">
+                  <div className="relative aspect-square overflow-hidden bg-white">
                     {profile.photoUrl ? (
-                      <Image
+                      // Keep the original uploaded aspect ratio in the editor.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
                         src={profile.photoUrl}
                         alt=""
-                        fill
-                        unoptimized
-                        sizes="180px"
-                        className="object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 h-full w-full object-contain"
                       />
                     ) : (
-                      <span className="flex h-full min-h-52 items-center justify-center font-serif text-5xl text-white/85">
+                      <span className="flex h-full items-center justify-center bg-school-navy font-serif text-5xl text-white/85">
                         {initials(profile.name)}
                       </span>
                     )}

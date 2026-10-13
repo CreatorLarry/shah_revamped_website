@@ -84,13 +84,13 @@ export function Header() {
           </Link>
 
           <nav aria-label="Main navigation" className="hidden xl:block">
-            <ul className="flex items-center gap-1 xl:gap-2">
+            <ul className="flex items-center gap-0.5">
               {navigation.map((item) => (
                 <li key={item.href} className="group relative">
                   <a
                     href={item.href}
                     aria-current={pathname === item.href ? "page" : undefined}
-                    className={`relative flex items-center gap-1 px-3 py-3 text-[0.69rem] font-bold uppercase tracking-[0.13em] transition-colors after:absolute after:inset-x-3 after:bottom-1 after:h-px after:origin-left after:bg-school-red after:transition-transform hover:text-school-red hover:after:scale-x-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-school-navy xl:px-4 ${
+                    className={`relative flex items-center gap-1 px-2.5 py-3 text-[0.62rem] font-bold uppercase tracking-[0.11em] transition-colors after:absolute after:inset-x-2.5 after:bottom-1 after:h-px after:origin-left after:bg-school-red after:transition-transform hover:text-school-red hover:after:scale-x-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-school-navy ${
                       isActive(item.href)
                         ? "text-school-red after:scale-x-100"
                         : "text-school-ink after:scale-x-0"
