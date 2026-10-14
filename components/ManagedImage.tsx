@@ -1,14 +1,20 @@
 "use client";
 
 import NextImage, { type ImageProps } from "next/image";
-import { useEffect, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 type ImageOverride = {
   url: string;
   alt: string;
 };
 
-type ImageRegistry = Record<string, ImageOverride>;
+export type ImageRegistry = Record<string, ImageOverride>;
 
 type ManagedImageProps = ImageProps & {
   imageKey?: string;
@@ -17,6 +23,40 @@ type ManagedImageProps = ImageProps & {
 let registryPromise: Promise<ImageRegistry> | null = null;
 const registryListeners = new Set<() => void>();
 let contentChannel: BroadcastChannel | null = null;
+const ImageRegistryContext = createContext<ImageRegistry>({});
+
+export function ManagedImageProvider({
+  children,
+  initialRegistry,
+}: {
+  children: ReactNode;
+  initialRegistry: ImageRegistry;
+}) {
+  const [registry, setRegistry] = useState(initialRegistry);
+
+  useEffect(() => {
+    let active = true;
+    ensureContentChannel();
+
+    const handleRefresh = () => {
+      void loadImageRegistry().then((nextRegistry) => {
+        if (active) setRegistry(nextRegistry);
+      });
+    };
+
+    registryListeners.add(handleRefresh);
+    return () => {
+      active = false;
+      registryListeners.delete(handleRefresh);
+    };
+  }, []);
+
+  return (
+    <ImageRegistryContext.Provider value={registry}>
+      {children}
+    </ImageRegistryContext.Provider>
+  );
+}
 
 export function ManagedImage({
   src,
@@ -25,42 +65,21 @@ export function ManagedImage({
   onError,
   ...props
 }: ManagedImageProps) {
-  const [override, setOverride] = useState<ImageOverride | null>(null);
+  const registry = useContext(ImageRegistryContext);
   const registryKey = imageKey ?? (typeof src === "string" ? src : "");
-
-  useEffect(() => {
-    let active = true;
-    ensureContentChannel();
-
-    async function updateImage() {
-      if (!registryKey) {
-        if (active) setOverride(null);
-        return;
-      }
-
-      const registry = await loadImageRegistry();
-      if (active) setOverride(registry[registryKey] ?? null);
-    }
-
-    void updateImage();
-    const handleRefresh = () => void updateImage();
-    registryListeners.add(handleRefresh);
-
-    return () => {
-      active = false;
-      registryListeners.delete(handleRefresh);
-    };
-  }, [registryKey]);
-
-  const resolvedAlt = alt === "" ? "" : override?.alt || alt;
+  const override = registryKey ? registry[registryKey] : undefined;
+  const [failedOverrideUrl, setFailedOverrideUrl] = useState("");
+  const activeOverride =
+    override?.url === failedOverrideUrl ? undefined : override;
+  const resolvedAlt = alt === "" ? "" : activeOverride?.alt || alt;
 
   return (
     <NextImage
       {...props}
-      src={override?.url || src}
+      src={activeOverride?.url || src}
       alt={resolvedAlt}
       onError={(event) => {
-        if (override) setOverride(null);
+        if (activeOverride) setFailedOverrideUrl(activeOverride.url);
         onError?.(event);
       }}
     />

@@ -7,6 +7,10 @@ import type {
   DashboardFeePage,
   DashboardLeadershipMessagePage,
 } from "@/data/editable-pages";
+import {
+  getDashboardImageExtension,
+  prepareDashboardImage,
+} from "@/lib/dashboard-image-upload";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type DashboardPagesPanelProps = {
@@ -311,18 +315,11 @@ function SaveButton({ saving, label }: { saving: boolean; label: string }) {
 }
 
 async function uploadPageImage(file: File, stem: string) {
-  const extensions: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-    "image/avif": "avif",
-  };
-  const extension = extensions[file.type];
-  if (!extension || file.size < 1) throw new Error("Choose a JPG, PNG, WebP or AVIF image.");
-  if (file.size > 10 * 1024 * 1024) throw new Error("Images must be 10 MB or smaller.");
+  const uploadFile = await prepareDashboardImage(file);
+  const extension = getDashboardImageExtension(uploadFile);
   const objectPath = `pages/${stem}-${Date.now()}-${crypto.randomUUID()}.${extension}`;
-  const { error } = await createSupabaseBrowserClient().storage.from("site-images").upload(objectPath, file, {
-    contentType: file.type,
+  const { error } = await createSupabaseBrowserClient().storage.from("site-images").upload(objectPath, uploadFile, {
+    contentType: uploadFile.type,
     cacheControl: "31536000",
     upsert: false,
   });

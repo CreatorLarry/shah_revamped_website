@@ -38,6 +38,10 @@ import type {
   LeadershipProfile,
   SiteImage,
 } from "@/db/dashboard";
+import {
+  getDashboardImageExtension,
+  prepareDashboardImage,
+} from "@/lib/dashboard-image-upload";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { DashboardPagesPanel } from "@/components/DashboardPagesPanel";
 
@@ -74,35 +78,21 @@ const enquiryStatuses = [
   { value: "closed", label: "Closed" },
 ] as const;
 
-const MAX_DASHBOARD_IMAGE_SIZE = 10 * 1024 * 1024;
-const dashboardImageExtensions: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/avif": "avif",
-};
-
 async function uploadDashboardImage(
   file: File,
   folder: "replacements" | "leadership" | "events",
   stem: string,
 ) {
-  const extension = dashboardImageExtensions[file.type];
-  if (!extension || file.size < 1) {
-    throw new Error("Choose a JPG, PNG, WebP or AVIF image.");
-  }
-  if (file.size > MAX_DASHBOARD_IMAGE_SIZE) {
-    throw new Error("Images must be 10 MB or smaller.");
-  }
-
+  const uploadFile = await prepareDashboardImage(file);
+  const extension = getDashboardImageExtension(uploadFile);
   const safeStem = stem
     .toLowerCase()
     .replace(/[^a-z0-9_-]+/g, "-")
     .replace(/^-+|-+$/g, "") || "image";
   const objectPath = `${folder}/${safeStem}-${Date.now()}-${crypto.randomUUID()}.${extension}`;
   const supabase = createSupabaseBrowserClient();
-  const { error } = await supabase.storage.from("site-images").upload(objectPath, file, {
-    contentType: file.type,
+  const { error } = await supabase.storage.from("site-images").upload(objectPath, uploadFile, {
+    contentType: uploadFile.type,
     cacheControl: "31536000",
     upsert: false,
   });
@@ -117,14 +107,8 @@ async function removeDashboardUpload(objectPath: string) {
 }
 
 async function uploadStoryImage(file: File, stem: string) {
-  const extension = dashboardImageExtensions[file.type];
-  if (!extension || file.size < 1) {
-    throw new Error("Choose a JPG, PNG, WebP or AVIF image.");
-  }
-  if (file.size > MAX_DASHBOARD_IMAGE_SIZE) {
-    throw new Error("Images must be 10 MB or smaller.");
-  }
-
+  const uploadFile = await prepareDashboardImage(file);
+  const extension = getDashboardImageExtension(uploadFile);
   const safeStem =
     stem
       .toLowerCase()
@@ -134,8 +118,8 @@ async function uploadStoryImage(file: File, stem: string) {
   const supabase = createSupabaseBrowserClient();
   const { error } = await supabase.storage
     .from("story-images")
-    .upload(objectPath, file, {
-      contentType: file.type,
+    .upload(objectPath, uploadFile, {
+      contentType: uploadFile.type,
       cacheControl: "31536000",
       upsert: false,
     });
@@ -160,7 +144,7 @@ async function readApiResult<T extends object>(response: Response): Promise<T> {
   } catch {
     throw new Error(
       response.status === 413
-        ? "This image is too large for the website upload route."
+        ? "This image is larger than the configured storage allowance."
         : "The server returned an unexpected response. Please try again.",
     );
   }
@@ -1560,7 +1544,8 @@ function MediaPanel({
         <p className="mt-4 max-w-3xl text-sm leading-7 text-school-muted">
           Every card represents one exact website placement. Replacing it will
           not change another section, even when both originally used the same
-          photograph. JPG, PNG, WebP and AVIF files up to 10 MB are accepted.
+          photograph. JPG, PNG, WebP and AVIF files are accepted up to the
+          Supabase project’s storage allowance.
         </p>
       </div>
 

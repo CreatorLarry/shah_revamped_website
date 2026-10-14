@@ -210,7 +210,7 @@ values (
   'story-images',
   'story-images',
   true,
-  10485760,
+  null,
   array['image/jpeg', 'image/png', 'image/webp', 'image/avif']
 )
 on conflict (id) do update

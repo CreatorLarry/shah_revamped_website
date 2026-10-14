@@ -1,7 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { headers } from "next/headers";
+import {
+  ManagedImageProvider,
+  type ImageRegistry,
+} from "@/components/ManagedImage";
 import { PrivacyNotice } from "@/components/PrivacyNotice";
+import { getPublicSiteImageOverrides } from "@/db/dashboard";
 import { getSiteOrigin } from "@/lib/site-origin";
 import "./globals.css";
 
@@ -83,16 +88,26 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let imageRegistry: ImageRegistry = {};
+
+  try {
+    imageRegistry = await getPublicSiteImageOverrides();
+  } catch {
+    // Local images remain available if Supabase is not configured or reachable.
+  }
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} antialiased`}>
-        {children}
-        <PrivacyNotice />
+        <ManagedImageProvider initialRegistry={imageRegistry}>
+          {children}
+          <PrivacyNotice />
+        </ManagedImageProvider>
       </body>
     </html>
   );
