@@ -116,6 +116,41 @@ async function removeDashboardUpload(objectPath: string) {
   await createSupabaseBrowserClient().storage.from("site-images").remove([objectPath]);
 }
 
+async function uploadStoryImage(file: File, stem: string) {
+  const extension = dashboardImageExtensions[file.type];
+  if (!extension || file.size < 1) {
+    throw new Error("Choose a JPG, PNG, WebP or AVIF image.");
+  }
+  if (file.size > MAX_DASHBOARD_IMAGE_SIZE) {
+    throw new Error("Images must be 10 MB or smaller.");
+  }
+
+  const safeStem =
+    stem
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "story";
+  const objectPath = `stories/${safeStem}-${Date.now()}-${crypto.randomUUID()}.${extension}`;
+  const supabase = createSupabaseBrowserClient();
+  const { error } = await supabase.storage
+    .from("story-images")
+    .upload(objectPath, file, {
+      contentType: file.type,
+      cacheControl: "31536000",
+      upsert: false,
+    });
+
+  if (error) throw new Error(error.message || "The story image upload failed.");
+  const publicUrl = supabase.storage.from("story-images").getPublicUrl(objectPath).data
+    .publicUrl;
+  return { objectPath, publicUrl };
+}
+
+async function removeStoryUploads(objectPaths: string[]) {
+  if (objectPaths.length === 0) return;
+  await createSupabaseBrowserClient().storage.from("story-images").remove(objectPaths);
+}
+
 async function readApiResult<T extends object>(response: Response): Promise<T> {
   const text = await response.text();
   if (!text) return {} as T;
@@ -628,10 +663,38 @@ function StoriesPanel({
       : stories;
   }, [search, stories]);
 
-  async function saveStory(values: StoryEditorPayload) {
+  async function saveStory(submission: StoryEditorSubmission) {
     setSaving(true);
+    const uploadedPaths: string[] = [];
 
     try {
+      const values: StoryEditorPayload = {
+        ...submission.values,
+        sections: submission.values.sections.map((section) => ({ ...section })),
+      };
+
+      if (submission.heroFile) {
+        const upload = await uploadStoryImage(
+          submission.heroFile,
+          `${values.slug}-hero`,
+        );
+        uploadedPaths.push(upload.objectPath);
+        values.image = upload.publicUrl;
+      }
+
+      for (const [index, file] of submission.sectionFiles.entries()) {
+        if (!file || !values.sections[index]) continue;
+        const upload = await uploadStoryImage(
+          file,
+          `${values.slug}-section-${index + 1}`,
+        );
+        uploadedPaths.push(upload.objectPath);
+        values.sections[index] = {
+          ...values.sections[index],
+          image: upload.publicUrl,
+        };
+      }
+
       const response = await fetch(
         editingStory ? `/api/dashboard/stories/${editingStory.id}` : "/api/dashboard/stories",
         {
@@ -653,6 +716,7 @@ function StoriesPanel({
       setEditingStory(null);
       onNotice(editingStory ? "The story changes are now live." : "The new story has been saved.");
     } catch (error) {
+      await removeStoryUploads(uploadedPaths);
       onNotice(
         error instanceof Error ? error.message : "The story could not be saved.",
       );
@@ -892,6 +956,12 @@ type StoryEditorPayload = {
   }>;
 };
 
+type StoryEditorSubmission = {
+  values: StoryEditorPayload;
+  heroFile: File | null;
+  sectionFiles: Array<File | null>;
+};
+
 function StoryCreateForm({
   story,
   onSubmit,
@@ -899,7 +969,7 @@ function StoryCreateForm({
   saving,
 }: {
   story: DashboardStory | null;
-  onSubmit: (values: StoryEditorPayload) => void;
+  onSubmit: (submission: StoryEditorSubmission) => void;
   onCancel: () => void;
   saving: boolean;
 }) {
@@ -918,23 +988,35 @@ function StoryCreateForm({
 
   function submitStory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const values = Object.fromEntries(new FormData(event.currentTarget).entries());
+    const formData = new FormData(event.currentTarget);
+    const values = Object.fromEntries(formData.entries());
+    const heroFile = formData.get("heroFile");
     onSubmit({
-      title: String(values.title ?? ""),
-      publishedAt: new Date(String(values.publishedAt ?? "")).toISOString(),
-      slug: String(values.slug ?? ""),
-      category: String(values.category ?? ""),
-      readTime: String(values.readTime ?? ""),
-      image: String(values.image ?? ""),
-      alt: String(values.alt ?? ""),
-      excerpt: String(values.excerpt ?? ""),
-      quote: String(values.quote ?? ""),
-      status: values.status === "published" ? "published" : "draft",
-      sections: sections.map((section) => ({
-        heading: section.heading,
-        paragraphs: section.paragraphs.filter(Boolean),
-        ...(section.image ? { image: section.image, imageAlt: section.imageAlt } : {}),
-      })),
+      values: {
+        title: String(values.title ?? ""),
+        publishedAt: new Date(String(values.publishedAt ?? "")).toISOString(),
+        slug: String(values.slug ?? ""),
+        category: String(values.category ?? ""),
+        readTime: String(values.readTime ?? ""),
+        image: String(values.image ?? ""),
+        alt: String(values.alt ?? ""),
+        excerpt: String(values.excerpt ?? ""),
+        quote: String(values.quote ?? ""),
+        status: values.status === "published" ? "published" : "draft",
+        sections: sections.map((section) => ({
+          heading: section.heading,
+          paragraphs: section.paragraphs.filter(Boolean),
+          ...(section.image
+            ? { image: section.image, imageAlt: section.imageAlt }
+            : {}),
+        })),
+      },
+      heroFile:
+        heroFile instanceof File && heroFile.size > 0 ? heroFile : null,
+      sectionFiles: sections.map((_, index) => {
+        const file = formData.get(`sectionFile-${index}`);
+        return file instanceof File && file.size > 0 ? file : null;
+      }),
     });
   }
 
@@ -1012,12 +1094,20 @@ function StoryCreateForm({
             defaultValue={story?.readTime ?? "4 minute read"}
           />
         </DashboardField>
-        <DashboardField label="Hero image path">
+        <DashboardField label="Current hero image path or URL">
           <input
             className={inputClass}
             name="image"
             defaultValue={story?.image ?? "/images/school/campus-assembly.webp"}
             required
+          />
+        </DashboardField>
+        <DashboardField label="Upload a new hero image from this device">
+          <input
+            type="file"
+            name="heroFile"
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            className="block min-h-11 w-full bg-white px-3 py-2 text-xs font-normal normal-case tracking-normal text-school-ink file:mr-3 file:border-0 file:bg-school-cream file:px-3 file:py-2 file:text-[0.6rem] file:font-bold file:uppercase file:text-school-navy"
           />
         </DashboardField>
         <DashboardField label="Image description">
@@ -1078,9 +1168,19 @@ function StoryCreateForm({
                 <DashboardField label="Section heading">
                   <input className={inputClass} value={section.heading} required onChange={(event) => setSections((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, heading: event.target.value } : item))} />
                 </DashboardField>
-                <DashboardField label="Section image path (optional)">
+                <DashboardField label="Current section image path or URL (optional)">
                   <input className={inputClass} value={section.image} onChange={(event) => setSections((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, image: event.target.value } : item))} />
                 </DashboardField>
+                <div className="md:col-span-2">
+                  <DashboardField label="Upload a new section image from this device (optional)">
+                    <input
+                      type="file"
+                      name={`sectionFile-${index}`}
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      className="block min-h-11 w-full bg-white px-3 py-2 text-xs font-normal normal-case tracking-normal text-school-ink file:mr-3 file:border-0 file:bg-school-cream file:px-3 file:py-2 file:text-[0.6rem] file:font-bold file:uppercase file:text-school-navy"
+                    />
+                  </DashboardField>
+                </div>
                 <div className="md:col-span-2">
                   <DashboardField label="Paragraphs">
                     <textarea className={`${inputClass} min-h-32 resize-y`} value={section.paragraphs.join("\n\n")} required onChange={(event) => setSections((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, paragraphs: event.target.value.split(/\n\s*\n/).map((paragraph) => paragraph.trim()) } : item))} />
@@ -1594,8 +1694,63 @@ function LeadershipPanel({
   onNotice: (message: string) => void;
 }) {
   const [savingSlug, setSavingSlug] = useState("");
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const profileInputClass =
     "min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm font-normal normal-case tracking-normal text-school-ink outline-none placeholder:text-school-muted/60 focus:border-school-red";
+
+  async function createProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const file = formData.get("file");
+    const slug = String(formData.get("slug") ?? "");
+    let uploadedPath = "";
+    setSavingSlug("__new__");
+    try {
+      if (file instanceof File && file.size > 0) {
+        uploadedPath = await uploadDashboardImage(file, "leadership", slug);
+      }
+      const response = await fetch("/api/dashboard/leadership", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          slug,
+          name: String(formData.get("name") ?? ""),
+          role: String(formData.get("role") ?? ""),
+          area: String(formData.get("area") ?? ""),
+          description: String(formData.get("description") ?? ""),
+          photoAlt: String(formData.get("photoAlt") ?? ""),
+          confirmed: formData.get("confirmed") === "on",
+          photoObjectPath: uploadedPath || null,
+        }),
+      });
+      const result = await readApiResult<{
+        profile?: LeadershipProfile;
+        error?: string;
+      }>(response);
+      if (!response.ok || !result.profile) {
+        throw new Error(result.error || "The leadership profile could not be created.");
+      }
+      const createdProfile = result.profile;
+      onProfilesChange(
+        [...profiles, createdProfile].sort(
+          (first, second) => first.sortOrder - second.sortOrder,
+        ),
+      );
+      form.reset();
+      setShowCreateForm(false);
+      onNotice(`${createdProfile.name}'s leadership profile has been added.`);
+    } catch (error) {
+      await removeDashboardUpload(uploadedPath);
+      onNotice(
+        error instanceof Error
+          ? error.message
+          : "The leadership profile could not be created.",
+      );
+    } finally {
+      setSavingSlug("");
+    }
+  }
 
   async function saveProfile(
     event: FormEvent<HTMLFormElement>,
@@ -1679,16 +1834,125 @@ function LeadershipPanel({
 
   return (
     <div>
-      <p className="text-[0.66rem] font-bold uppercase tracking-[0.17em] text-school-red">
-        People and responsibilities
-      </p>
-      <h2 className="mt-3 font-serif text-4xl tracking-[-0.035em] sm:text-5xl">
-        Leadership profiles
-      </h2>
-      <p className="mt-4 max-w-3xl text-sm leading-7 text-school-muted">
-        Update each leader’s name, role, biography and portrait. Every profile
-        has its own independent photo.
-      </p>
+      <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <div>
+          <p className="text-[0.66rem] font-bold uppercase tracking-[0.17em] text-school-red">
+            People and responsibilities
+          </p>
+          <h2 className="mt-3 font-serif text-4xl tracking-[-0.035em] sm:text-5xl">
+            Leadership profiles
+          </h2>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-school-muted">
+            Add or update each leader’s name, role, biography and portrait.
+            Every profile has its own independent photo.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowCreateForm((current) => !current)}
+          className="inline-flex min-h-12 items-center justify-center gap-3 bg-school-red px-5 text-[0.68rem] font-bold uppercase tracking-[0.13em] text-white transition-colors hover:bg-school-red-dark"
+        >
+          {showCreateForm ? (
+            <X aria-hidden="true" className="size-4" />
+          ) : (
+            <Plus aria-hidden="true" className="size-4" />
+          )}
+          {showCreateForm ? "Close form" : "Add a profile"}
+        </button>
+      </div>
+
+      {showCreateForm ? (
+        <form
+          onSubmit={createProfile}
+          className="mt-8 border-t-4 border-school-gold bg-school-navy p-6 text-white shadow-sm sm:p-8"
+        >
+          <div>
+            <p className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-school-gold">
+              New leader
+            </p>
+            <h3 className="mt-3 font-serif text-3xl">Add a leadership profile</h3>
+          </div>
+          <div className="mt-7 grid gap-5 md:grid-cols-2">
+            <DashboardField label="Name">
+              <input
+                name="name"
+                required
+                maxLength={120}
+                className={profileInputClass}
+                onBlur={(event) => {
+                  const slugInput = event.currentTarget.form?.elements.namedItem(
+                    "slug",
+                  ) as HTMLInputElement | null;
+                  if (slugInput && !slugInput.value) {
+                    slugInput.value = slugify(event.currentTarget.value);
+                  }
+                }}
+              />
+            </DashboardField>
+            <DashboardField label="Web address">
+              <input
+                name="slug"
+                required
+                maxLength={120}
+                pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+                placeholder="new-leadership-role"
+                className={profileInputClass}
+              />
+            </DashboardField>
+            <DashboardField label="Role">
+              <input name="role" required maxLength={120} className={profileInputClass} />
+            </DashboardField>
+            <DashboardField label="Leadership area">
+              <input name="area" required maxLength={80} className={profileInputClass} />
+            </DashboardField>
+            <div className="md:col-span-2">
+              <DashboardField label="Biography">
+                <textarea
+                  name="description"
+                  required
+                  maxLength={600}
+                  className={`${profileInputClass} min-h-28 resize-y py-3 leading-6`}
+                />
+              </DashboardField>
+            </div>
+            <DashboardField label="Portrait">
+              <input
+                type="file"
+                name="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                className="block min-h-11 w-full bg-white px-3 py-2 text-xs font-normal normal-case tracking-normal text-school-muted file:mr-3 file:border-0 file:bg-school-cream file:px-3 file:py-2 file:text-[0.6rem] file:font-bold file:uppercase file:text-school-navy"
+              />
+            </DashboardField>
+            <DashboardField label="Portrait description">
+              <input
+                name="photoAlt"
+                maxLength={220}
+                placeholder="Name and role shown in the portrait"
+                className={profileInputClass}
+              />
+            </DashboardField>
+          </div>
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <label className="flex items-center gap-3 text-sm text-white/75">
+              <input
+                type="checkbox"
+                name="confirmed"
+                defaultChecked
+                className="size-4 accent-school-gold"
+              />
+              Ready to publish
+            </label>
+            <button
+              type="submit"
+              disabled={savingSlug === "__new__"}
+              className="inline-flex min-h-12 items-center justify-center gap-3 bg-school-red px-6 text-[0.68rem] font-bold uppercase tracking-[0.13em] text-white hover:bg-school-red-dark disabled:cursor-wait disabled:opacity-60"
+            >
+              <Plus aria-hidden="true" className="size-4" />
+              {savingSlug === "__new__" ? "Adding…" : "Add profile"}
+            </button>
+          </div>
+        </form>
+      ) : null}
 
       {profiles.length > 0 ? (
         <div className="mt-8 grid gap-6 xl:grid-cols-2">

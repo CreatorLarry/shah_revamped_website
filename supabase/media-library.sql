@@ -201,6 +201,12 @@ to authenticated
 using (((select auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin')
 with check (((select auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin');
 
+drop policy if exists "admins can create leadership profiles" on public.leadership_profiles;
+create policy "admins can create leadership profiles"
+on public.leadership_profiles for insert
+to authenticated
+with check (((select auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin');
+
 drop policy if exists "admins can delete leadership profiles" on public.leadership_profiles;
 create policy "admins can delete leadership profiles"
 on public.leadership_profiles for delete
@@ -209,7 +215,7 @@ using (((select auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin');
 
 revoke all on table public.leadership_profiles from anon, authenticated;
 grant select on table public.leadership_profiles to anon, authenticated;
-grant update, delete on table public.leadership_profiles to authenticated;
+grant insert, update, delete on table public.leadership_profiles to authenticated;
 
 insert into public.leadership_profiles (
   slug, name, role, area, description, confirmed, sort_order

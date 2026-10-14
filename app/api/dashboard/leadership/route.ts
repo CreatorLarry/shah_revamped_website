@@ -1,4 +1,5 @@
 import {
+  createLeadershipProfile,
   deleteLeadershipProfile,
   getDashboardLeadershipProfiles,
   updateLeadershipProfile,
@@ -37,6 +38,95 @@ export async function DELETE(request: Request) {
   } catch {
     return Response.json(
       { error: "The leadership profile could not be deleted." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  const access = await requireDashboardApiUser();
+  if (access.error) return access.error;
+
+  try {
+    const payload = (await request.json()) as Record<string, unknown>;
+    const slug = String(payload.slug ?? "").trim();
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 120) {
+      return Response.json(
+        { error: "Enter a valid web address using lowercase letters and hyphens." },
+        { status: 400 },
+      );
+    }
+
+    const profiles = await getDashboardLeadershipProfiles();
+    if (profiles.some((profile) => profile.slug === slug)) {
+      return Response.json(
+        { error: "A leadership profile already uses that web address." },
+        { status: 409 },
+      );
+    }
+
+    const name = field(payload, "name", 120);
+    const role = field(payload, "role", 120);
+    const area = field(payload, "area", 80);
+    const description = field(payload, "description", 600);
+    const photoAlt = field(payload, "photoAlt", 220, false);
+    if (!name || !role || !area || !description) {
+      return Response.json(
+        { error: "Name, role, leadership area and biography are required." },
+        { status: 400 },
+      );
+    }
+
+    let photoUrl: string | null = null;
+    const objectPath = String(payload.photoObjectPath ?? "");
+    if (objectPath) {
+      if (!isValidLeadershipPath(objectPath)) {
+        return Response.json(
+          { error: "The uploaded leadership portrait is invalid." },
+          { status: 400 },
+        );
+      }
+      const supabase = await createSupabaseServerClient();
+      if (!(await storedObjectExists(supabase, objectPath))) {
+        return Response.json(
+          { error: "The uploaded leadership portrait could not be found." },
+          { status: 400 },
+        );
+      }
+      photoUrl = supabase.storage.from("site-images").getPublicUrl(objectPath).data
+        .publicUrl;
+    }
+
+    const sortOrder =
+      profiles.reduce(
+        (highest, profile) => Math.max(highest, profile.sortOrder),
+        0,
+      ) + 1;
+    const profile = await createLeadershipProfile({
+      slug,
+      name,
+      role,
+      area,
+      description,
+      photoUrl,
+      photoAlt,
+      confirmed: payload.confirmed === true,
+      sortOrder,
+    });
+    return Response.json({ profile }, { status: 201 });
+  } catch (error) {
+    const message =
+      error && typeof error === "object" && "message" in error
+        ? String(error.message).toLowerCase()
+        : "";
+    if (message.includes("duplicate") || message.includes("unique")) {
+      return Response.json(
+        { error: "A leadership profile already uses that web address." },
+        { status: 409 },
+      );
+    }
+    return Response.json(
+      { error: "The leadership profile could not be created." },
       { status: 500 },
     );
   }

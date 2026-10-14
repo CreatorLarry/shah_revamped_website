@@ -535,6 +535,37 @@ export async function getPublicLeadershipProfiles() {
   return (data as LeadershipProfileRow[]).map(mapLeadershipProfile);
 }
 
+export async function createLeadershipProfile(input: {
+  slug: string;
+  name: string;
+  role: string;
+  area: string;
+  description: string;
+  photoUrl: string | null;
+  photoAlt: string;
+  confirmed: boolean;
+  sortOrder: number;
+}) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("leadership_profiles")
+    .insert({
+      slug: input.slug,
+      name: input.name,
+      role: input.role,
+      area: input.area,
+      description: input.description,
+      photo_url: input.photoUrl,
+      photo_alt: input.photoAlt,
+      confirmed: input.confirmed,
+      sort_order: input.sortOrder,
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return mapLeadershipProfile(data as LeadershipProfileRow);
+}
+
 export async function updateLeadershipProfile(input: {
   slug: string;
   name: string;
