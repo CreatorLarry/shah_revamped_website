@@ -308,15 +308,29 @@ export async function deleteStory(id: number) {
 
 export async function getPublishedEvents(): Promise<DashboardEvent[]> {
   const supabase = createSupabasePublicClient();
-  const now = new Date().toISOString();
   const { data, error } = await supabase
     .from("events")
     .select("*")
     .eq("status", "published")
-    .or(`starts_at.gte.${now},ends_at.gte.${now}`)
     .order("starts_at", { ascending: true });
   if (error) throw error;
-  return (data as EventRow[]).map(mapEvent);
+
+  const now = Date.now();
+  return (data as EventRow[])
+    .map(mapEvent)
+    .sort((first, second) => {
+      const firstStart = new Date(first.startsAt).getTime();
+      const secondStart = new Date(second.startsAt).getTime();
+      const firstEnds = new Date(first.endsAt ?? first.startsAt).getTime();
+      const secondEnds = new Date(second.endsAt ?? second.startsAt).getTime();
+      const firstHasPassed = firstEnds < now;
+      const secondHasPassed = secondEnds < now;
+
+      if (firstHasPassed !== secondHasPassed) return firstHasPassed ? 1 : -1;
+      return firstHasPassed
+        ? secondStart - firstStart
+        : firstStart - secondStart;
+    });
 }
 
 export async function createEvent(input: EventMutationInput, createdBy: string) {

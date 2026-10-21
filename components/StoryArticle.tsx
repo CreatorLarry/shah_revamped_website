@@ -4,6 +4,7 @@ import { ArrowLeft, CalendarDays, Clock3 } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { StoryEngagement } from "@/components/StoryEngagement";
 import type { Story } from "../data/stories";
 
 type StoryArticleProps = {
@@ -129,6 +130,8 @@ export function StoryArticle({ story }: StoryArticleProps) {
             </div>
           </div>
         </article>
+
+        <StoryEngagement storySlug={story.slug} />
 
         <section className="bg-school-red py-20 text-white sm:py-24">
           <div className="mx-auto grid max-w-[1440px] gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:items-end lg:px-10">

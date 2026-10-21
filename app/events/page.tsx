@@ -47,34 +47,37 @@ export default async function EventsPage() {
 
             {events.length ? (
               <div className="mt-14 grid gap-8 lg:grid-cols-2">
-                {events.map((event) => (
-                  <article key={event.id} className="overflow-hidden border border-school-navy/15 bg-white shadow-sm">
-                    <div className="relative aspect-[16/9] overflow-hidden bg-school-navy">
-                      <Image
-                        src={event.image}
-                        imageKey={`event.${event.slug}.image`}
-                        alt={event.alt}
-                        fill
-                        unoptimized
-                        sizes="(max-width: 1024px) 100vw, 50vw"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="p-7 sm:p-9">
-                      <p className="flex items-center gap-2 text-[0.66rem] font-bold uppercase tracking-[0.15em] text-school-red">
-                        <CalendarDays aria-hidden="true" className="size-4" />
-                        {formatEventDate(event.startsAt)}
-                      </p>
-                      <h2 className="mt-4 font-serif text-3xl tracking-[-0.03em] text-school-ink sm:text-4xl">{event.title}</h2>
-                      <p className="mt-4 text-sm leading-7 text-school-muted">{event.summary}</p>
-                      <div className="mt-6 grid gap-3 border-t border-school-navy/10 pt-5 text-sm text-school-ink sm:grid-cols-2">
-                        <span className="flex items-center gap-3"><Clock3 aria-hidden="true" className="size-4 text-school-red" />{formatEventTime(event.startsAt, event.endsAt)}</span>
-                        <span className="flex items-center gap-3"><MapPin aria-hidden="true" className="size-4 text-school-red" />{event.location}</span>
+                {events.map((event) => {
+                  const hasPassed = eventHasPassed(event.startsAt, event.endsAt);
+                  return (
+                    <article key={event.id} className="overflow-hidden border border-school-navy/15 bg-white shadow-sm">
+                      <div className="relative aspect-[16/9] overflow-hidden bg-school-navy">
+                        <Image
+                          src={event.image}
+                          imageKey={`event.${event.slug}.image`}
+                          alt={event.alt}
+                          fill
+                          unoptimized
+                          sizes="(max-width: 1024px) 100vw, 50vw"
+                          className="object-cover"
+                        />
                       </div>
-                      <p className="mt-6 whitespace-pre-line text-sm leading-7 text-school-ink">{event.description}</p>
-                    </div>
-                  </article>
-                ))}
+                      <div className="p-7 sm:p-9">
+                        <p className="flex items-center gap-2 text-[0.66rem] font-bold uppercase tracking-[0.15em] text-school-red">
+                          <CalendarDays aria-hidden="true" className="size-4" />
+                          {hasPassed ? "Recently held · " : ""}{formatEventDate(event.startsAt)}
+                        </p>
+                        <h2 className="mt-4 font-serif text-3xl tracking-[-0.03em] text-school-ink sm:text-4xl">{event.title}</h2>
+                        <p className="mt-4 text-sm leading-7 text-school-muted">{event.summary}</p>
+                        <div className="mt-6 grid gap-3 border-t border-school-navy/10 pt-5 text-sm text-school-ink sm:grid-cols-2">
+                          <span className="flex items-center gap-3"><Clock3 aria-hidden="true" className="size-4 text-school-red" />{formatEventTime(event.startsAt, event.endsAt)}</span>
+                          <span className="flex items-center gap-3"><MapPin aria-hidden="true" className="size-4 text-school-red" />{event.location}</span>
+                        </div>
+                        <p className="mt-6 whitespace-pre-line text-sm leading-7 text-school-ink">{event.description}</p>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             ) : (
               <div className="mt-14 border-l-4 border-school-gold bg-white p-8 sm:p-10">
@@ -99,4 +102,8 @@ function formatEventDate(value: string) {
 function formatEventTime(start: string, end: string | null) {
   const formatter = new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: "Africa/Nairobi" });
   return end ? `${formatter.format(new Date(start))} – ${formatter.format(new Date(end))}` : formatter.format(new Date(start));
+}
+
+function eventHasPassed(start: string, end: string | null) {
+  return new Date(end ?? start).getTime() < Date.now();
 }

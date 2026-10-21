@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageSquareText,
   Search,
   Send,
   Settings,
@@ -38,6 +39,7 @@ import type {
   LeadershipProfile,
   SiteImage,
 } from "@/db/dashboard";
+import type { DashboardStoryComment } from "@/db/story-engagement";
 import {
   getDashboardImageExtension,
   prepareDashboardImage,
@@ -48,6 +50,7 @@ import { DashboardPagesPanel } from "@/components/DashboardPagesPanel";
 type DashboardSection =
   | "overview"
   | "stories"
+  | "comments"
   | "events"
   | "media"
   | "leadership"
@@ -65,6 +68,7 @@ type DashboardAppProps = {
 const navigation = [
   { id: "overview", label: "Overview", Icon: LayoutDashboard },
   { id: "stories", label: "Stories", Icon: BookOpenText },
+  { id: "comments", label: "Comments", Icon: MessageSquareText },
   { id: "events", label: "Events", Icon: CalendarDays },
   { id: "media", label: "Media", Icon: Images },
   { id: "leadership", label: "Leadership", Icon: UsersRound },
@@ -160,6 +164,9 @@ export function DashboardApp({
   const [section, setSection] = useState<DashboardSection>("overview");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [stories, setStories] = useState(initialSnapshot.stories);
+  const [comments, setComments] = useState<DashboardStoryComment[]>([]);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [events, setEvents] = useState(initialSnapshot.events);
   const [enquiries, setEnquiries] = useState(initialSnapshot.enquiries);
   const [media, setMedia] = useState<SiteImage[]>([]);
@@ -192,6 +199,32 @@ export function DashboardApp({
         );
       } finally {
         setMediaLoading(false);
+      }
+    }
+
+    if (
+      nextSection === "comments" &&
+      !commentsLoaded &&
+      !commentsLoading
+    ) {
+      setCommentsLoading(true);
+      try {
+        const response = await fetch("/api/dashboard/comments");
+        const result = (await response.json()) as {
+          comments?: DashboardStoryComment[];
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(result.error || "Comments could not be loaded.");
+        }
+        setComments(result.comments ?? []);
+        setCommentsLoaded(true);
+      } catch (error) {
+        setNotice(
+          error instanceof Error ? error.message : "Comments could not be loaded.",
+        );
+      } finally {
+        setCommentsLoading(false);
       }
     }
 
@@ -232,6 +265,9 @@ export function DashboardApp({
   ).length;
   const publishedStories = stories.filter(
     (story) => story.status === "published",
+  ).length;
+  const pendingComments = comments.filter(
+    (comment) => comment.status === "pending",
   ).length;
 
   const sectionLabel =
@@ -284,6 +320,11 @@ export function DashboardApp({
                 {id === "enquiries" && newEnquiries > 0 ? (
                   <span className="ml-auto flex min-w-6 items-center justify-center rounded-full bg-school-red px-1.5 py-1 text-[0.62rem] font-bold text-white">
                     {newEnquiries}
+                  </span>
+                ) : null}
+                {id === "comments" && pendingComments > 0 ? (
+                  <span className="ml-auto flex min-w-6 items-center justify-center rounded-full bg-school-red px-1.5 py-1 text-[0.62rem] font-bold text-white">
+                    {pendingComments}
                   </span>
                 ) : null}
               </button>
@@ -421,6 +462,15 @@ export function DashboardApp({
             <StoriesPanel
               stories={stories}
               onStoriesChange={setStories}
+              onNotice={setNotice}
+            />
+          ) : null}
+
+          {section === "comments" ? (
+            <CommentsPanel
+              comments={comments}
+              loading={commentsLoading}
+              onCommentsChange={setComments}
               onNotice={setNotice}
             />
           ) : null}
@@ -2065,6 +2115,173 @@ function LeadershipPanel({
   );
 }
 
+function CommentsPanel({
+  comments,
+  loading,
+  onCommentsChange,
+  onNotice,
+}: {
+  comments: DashboardStoryComment[];
+  loading: boolean;
+  onCommentsChange: (comments: DashboardStoryComment[]) => void;
+  onNotice: (message: string) => void;
+}) {
+  const [filter, setFilter] = useState<"all" | DashboardStoryComment["status"]>("pending");
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const commentInputClass =
+    "min-h-11 w-full border border-school-navy/15 bg-school-cream px-3 text-sm font-normal normal-case tracking-normal text-school-ink outline-none placeholder:text-school-muted/60 focus:border-school-red";
+  const visibleComments =
+    filter === "all"
+      ? comments
+      : comments.filter((comment) => comment.status === filter);
+
+  async function saveComment(
+    event: FormEvent<HTMLFormElement>,
+    comment: DashboardStoryComment,
+  ) {
+    event.preventDefault();
+    setSavingId(comment.id);
+    const values = new FormData(event.currentTarget);
+    try {
+      const response = await fetch(`/api/dashboard/comments/${comment.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          status: values.get("status"),
+          staffReply: values.get("staffReply"),
+        }),
+      });
+      const result = (await response.json()) as {
+        comment?: DashboardStoryComment;
+        error?: string;
+      };
+      if (!response.ok || !result.comment) {
+        throw new Error(result.error || "The comment could not be updated.");
+      }
+      onCommentsChange(
+        comments.map((item) =>
+          item.id === result.comment?.id ? result.comment : item,
+        ),
+      );
+      onNotice(
+        result.comment.status === "approved"
+          ? "The comment is now visible on the story."
+          : result.comment.status === "rejected"
+            ? "The comment has been rejected and remains hidden."
+            : "The comment has returned to the moderation queue.",
+      );
+    } catch (error) {
+      onNotice(
+        error instanceof Error ? error.message : "The comment could not be updated.",
+      );
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  async function deleteComment(comment: DashboardStoryComment) {
+    if (!window.confirm(`Delete the comment from ${comment.name}? This cannot be undone.`)) return;
+    setSavingId(comment.id);
+    try {
+      const response = await fetch(`/api/dashboard/comments/${comment.id}`, {
+        method: "DELETE",
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error || "The comment could not be deleted.");
+      onCommentsChange(comments.filter((item) => item.id !== comment.id));
+      onNotice("The comment has been permanently deleted.");
+    } catch (error) {
+      onNotice(
+        error instanceof Error ? error.message : "The comment could not be deleted.",
+      );
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <div>
+          <p className="text-[0.66rem] font-bold uppercase tracking-[0.17em] text-school-red">Community</p>
+          <h2 className="mt-3 font-serif text-4xl tracking-[-0.035em] sm:text-5xl">Comment moderation</h2>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-school-muted">
+            Review every message before it appears publicly. Staff replies are displayed beneath approved comments.
+          </p>
+        </div>
+        <select
+          value={filter}
+          onChange={(event) => setFilter(event.target.value as typeof filter)}
+          className="min-h-11 border border-school-navy/15 bg-white px-4 text-sm text-school-navy outline-none focus:border-school-red"
+        >
+          <option value="pending">Awaiting review</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="all">All comments</option>
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="mt-8 border border-school-navy/10 bg-white p-8 text-sm text-school-muted">Loading comments…</div>
+      ) : visibleComments.length ? (
+        <div className="mt-8 grid gap-5 xl:grid-cols-2">
+          {visibleComments.map((comment) => (
+            <form
+              key={`${comment.id}-${comment.status}-${comment.staffReply}`}
+              onSubmit={(event) => void saveComment(event, comment)}
+              className="border border-school-navy/10 bg-white p-6 shadow-sm"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <StatusBadge status={comment.status} />
+                    <span className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-school-red">{comment.storySlug.replaceAll("-", " ")}</span>
+                  </div>
+                  <h3 className="mt-4 font-serif text-2xl text-school-ink">{comment.name}</h3>
+                  <p className="mt-1 text-xs text-school-muted">Submitted {formatDate(comment.createdAt)}</p>
+                </div>
+                <Link href={`/stories/${comment.storySlug}`} target="_blank" className="inline-flex items-center gap-2 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-navy hover:text-school-red">
+                  View story <ArrowUpRight aria-hidden="true" className="size-3.5" />
+                </Link>
+              </div>
+              <p className="mt-6 whitespace-pre-line border-l-2 border-school-gold pl-4 text-sm leading-7 text-school-muted">{comment.body}</p>
+              <div className="mt-6 grid gap-4">
+                <DashboardField label="Moderation status">
+                  <select name="status" defaultValue={comment.status} className={commentInputClass}>
+                    <option value="pending">Awaiting review</option>
+                    <option value="approved">Approve and publish</option>
+                    <option value="rejected">Reject and hide</option>
+                  </select>
+                </DashboardField>
+                <DashboardField label="Optional SLNA reply">
+                  <textarea name="staffReply" defaultValue={comment.staffReply} maxLength={1500} rows={4} placeholder="A response from the school…" className={`${commentInputClass} resize-y py-3 leading-6`} />
+                </DashboardField>
+              </div>
+              <div className="mt-5 flex flex-wrap justify-end gap-2">
+                <button type="button" disabled={savingId === comment.id} onClick={() => void deleteComment(comment)} className="inline-flex min-h-11 items-center justify-center gap-2 border border-school-red/25 px-4 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-school-red hover:bg-school-red hover:text-white disabled:opacity-60">
+                  <Trash2 aria-hidden="true" className="size-4" /> Delete
+                </button>
+                <button disabled={savingId === comment.id} className="inline-flex min-h-11 items-center justify-center gap-2 bg-school-navy px-5 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-white hover:bg-school-red disabled:cursor-wait disabled:opacity-60">
+                  <CheckCircle2 aria-hidden="true" className="size-4" />
+                  {savingId === comment.id ? "Saving…" : "Save decision"}
+                </button>
+              </div>
+            </form>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-8 border border-school-navy/10 bg-white">
+          <EmptyState
+            Icon={MessageSquareText}
+            title={filter === "pending" ? "Moderation queue is clear" : "No comments in this view"}
+            description={filter === "pending" ? "New visitor comments will appear here before publication." : "Choose another status to review more comments."}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EnquiriesPanel({
   enquiries,
   onEnquiriesChange,
@@ -2276,7 +2493,10 @@ function MetricCard({
 function StatusBadge({
   status,
 }: {
-  status: DashboardStory["status"] | Enquiry["status"];
+  status:
+    | DashboardStory["status"]
+    | Enquiry["status"]
+    | DashboardStoryComment["status"];
 }) {
   const styles = {
     published: "bg-[#e6f4ee] text-[#176b4c]",
@@ -2284,6 +2504,9 @@ function StatusBadge({
     new: "bg-[#fff0f0] text-school-red",
     in_progress: "bg-[#fff7d1] text-[#7a5a00]",
     closed: "bg-[#e6f4ee] text-[#176b4c]",
+    pending: "bg-[#fff7d1] text-[#7a5a00]",
+    approved: "bg-[#e6f4ee] text-[#176b4c]",
+    rejected: "bg-school-stone text-school-muted",
   };
   const labels = {
     published: "Published",
@@ -2291,6 +2514,9 @@ function StatusBadge({
     new: "New",
     in_progress: "Following up",
     closed: "Closed",
+    pending: "Awaiting review",
+    approved: "Approved",
+    rejected: "Rejected",
   };
 
   return (

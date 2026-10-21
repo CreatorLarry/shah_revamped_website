@@ -12,10 +12,12 @@
 5. Run media-library.sql in a second SQL Editor query to enable independent
    editing for every image placement and the Senior Management Team profiles.
    The file is repeatable; run it again after pulling an updated version.
-6. Sign out and back in if the user existed before the SQL ran. This refreshes
+6. Run story-engagement.sql to enable positive story reactions, moderated
+   comments and staff replies. This file is also repeatable.
+7. Sign out and back in if the user existed before the SQL ran. This refreshes
    the JWT with the new administrator role.
-7. Open /login, sign in, and test Stories, Enquiries, Media and Leadership.
-8. Add the same two environment variables to Vercel for Production, Preview
+8. Open /login, sign in, and test Stories, Comments, Enquiries, Media and Leadership.
+9. Add the same two environment variables to Vercel for Production, Preview
    and Development, then redeploy.
 
 Never place a secret key, service-role key or database password in a

@@ -34,7 +34,9 @@ const sections = [
           their name, email address and telephone number, together with the
           child’s age, intended year group and the message provided. Authorised
           staff accounts also use sign-in information to access the school
-          dashboard.
+          dashboard. If a visitor comments on a story, we collect the display
+          name and comment they choose to submit. Comments are reviewed before
+          publication.
         </p>
         <p>
           Like most hosted websites, our service providers may process limited
@@ -52,7 +54,9 @@ const sections = [
           Enquiry details are used to respond to the family, discuss admissions
           and arrange a visit where requested. Staff authentication information
           is used to protect the dashboard and maintain the website. We do not
-          use enquiry information for unrelated advertising.
+          use enquiry information for unrelated advertising. Story reactions
+          and comments are used only to support respectful engagement with
+          school news.
         </p>
       </>
     ),
@@ -94,7 +98,9 @@ const sections = [
           cookies. Essential cookies are used when authorised staff sign in so
           that the dashboard session remains secure. The privacy notice stores
           a small acknowledgement in your browser’s local storage so it does
-          not appear on every visit.
+          not appear on every visit. A functional identifier and local browser
+          setting prevent repeated reactions to the same story; they are not
+          used for advertising or cross-site tracking.
         </p>
         <p>
           If optional analytics or marketing tools are introduced later, this
