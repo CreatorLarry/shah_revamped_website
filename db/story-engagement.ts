@@ -61,6 +61,26 @@ export async function getPublicStoryEngagement(
   };
 }
 
+export async function getPublicStoryReactionCounts(
+  storySlugs: string[],
+): Promise<Record<string, number>> {
+  if (storySlugs.length === 0) return {};
+
+  const supabase = createSupabasePublicClient();
+  const { data, error } = await supabase
+    .from("story_reaction_counts")
+    .select("story_slug,reaction_count")
+    .in("story_slug", storySlugs);
+  if (error) throw error;
+
+  return Object.fromEntries(
+    (data ?? []).map((row) => [
+      String(row.story_slug),
+      Number(row.reaction_count ?? 0),
+    ]),
+  );
+}
+
 export async function submitStoryReaction(
   storySlug: string,
   voterToken: string,

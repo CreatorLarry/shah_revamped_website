@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { ManagedImage as Image } from "@/components/ManagedImage";
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, Clock3 } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Clock3, ThumbsUp } from "lucide-react";
 import { AdmissionsCta } from "@/components/AdmissionsCta";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { InteriorHero } from "@/components/InteriorHero";
 import { SectionHeading } from "@/components/SectionHeading";
 import { getPublicStories } from "@/data/story-service";
+import { getPublicStoryReactionCounts } from "@/db/story-engagement";
 
 export const metadata: Metadata = {
   title: "School Stories | Shah Lalji Nangpar Academy",
@@ -20,6 +21,14 @@ export const dynamic = "force-dynamic";
 
 export default async function StoriesPage() {
   const stories = await getPublicStories();
+  let reactionCounts: Record<string, number> = {};
+  try {
+    reactionCounts = await getPublicStoryReactionCounts(
+      stories.map((story) => story.slug),
+    );
+  } catch {
+    // Story cards remain available before story-engagement.sql is activated.
+  }
 
   return (
     <>
@@ -103,6 +112,10 @@ export default async function StoriesPage() {
                             {formatPublishedDate(story.publishedAt)}
                           </span>
                         ) : null}
+                        <span className="flex items-center gap-2 text-school-navy">
+                          <ThumbsUp aria-hidden="true" className="size-4 text-school-red" />
+                          {formatReactionCount(reactionCounts[story.slug] ?? 0)}
+                        </span>
                       </div>
                       <div className="mt-5 flex items-start justify-between gap-5">
                         <h2 className="font-serif text-3xl leading-[1.02] tracking-[-0.03em] text-school-ink sm:text-4xl">
@@ -142,4 +155,8 @@ function formatPublishedDate(value: string) {
     year: "numeric",
     timeZone: "Africa/Nairobi",
   }).format(new Date(value));
+}
+
+function formatReactionCount(count: number) {
+  return `${count.toLocaleString("en-KE")} inspired`;
 }
